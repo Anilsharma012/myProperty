@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { createApiUrl } from '@/lib/api-utils';
 
 interface FooterTestData {
   settings: any;
@@ -24,7 +25,7 @@ export default function FooterTest() {
     
     try {
       // Test the footer test endpoint
-      const response = await fetch('/api/footer/test');
+      const response = await fetch(createApiUrl('/api/footer/test'));
       console.log('Footer test response status:', response.status);
       
       if (response.ok) {
@@ -55,7 +56,7 @@ export default function FooterTest() {
       console.log('Testing individual endpoints...');
       
       // Test settings endpoint
-      const settingsResponse = await fetch('/api/footer/settings');
+      const settingsResponse = await fetch(createApiUrl('/api/footer/settings'));
       console.log('Settings response:', settingsResponse.status);
       if (settingsResponse.ok) {
         const settingsData = await settingsResponse.json();
@@ -63,7 +64,7 @@ export default function FooterTest() {
       }
 
       // Test links endpoint
-      const linksResponse = await fetch('/api/footer/links');
+      const linksResponse = await fetch(createApiUrl('/api/footer/links'));
       console.log('Links response:', linksResponse.status);
       if (linksResponse.ok) {
         const linksData = await linksResponse.json();
