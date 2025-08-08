@@ -1,46 +1,35 @@
+// vite.config.server.ts
 import { defineConfig } from "vite";
 import path from "path";
 
-// Server build configuration
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, "server/index.ts"),
+      // ✅ server ko yahin se start karna hai (index.ts sirf createServer return kare)
+      entry: path.resolve(__dirname, "server/start-server.ts"),
       name: "server",
-      fileName: "index",
+      fileName: () => "start-server", // output name without extension
       formats: ["es"],
-     
     },
     outDir: "dist/server",
     target: "node22",
     ssr: true,
     rollupOptions: {
       external: [
-        // Node.js built-ins
-        "fs",
-        "path",
-        "url",
-        "http",
-        "https",
-        "os",
-        "crypto",
-        "stream",
-        "util",
-        "events",
-        "buffer",
-        "querystring",
-        "child_process",
-        // External dependencies that should not be bundled
-        "express",
-        "cors",
+        // Node built-ins
+        "fs", "path", "url", "http", "https", "os", "crypto",
+        "stream", "util", "events", "buffer", "querystring", "child_process",
+        // External deps (keep out of bundle)
+        "express", "cors",
       ],
       output: {
         format: "es",
-          entryFileNames: "index.mjs",
+        entryFileNames: "start-server.mjs", // ✅ final file name
       },
     },
-    minify: false, // Keep readable for debugging
+    minify: false,     // debugging friendly
     sourcemap: true,
+    // emptyOutDir: false, // (optional) agar dist/ share ho raha ho
   },
   resolve: {
     alias: {

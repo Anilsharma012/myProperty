@@ -10,17 +10,18 @@
       "dist/server/**/*.js"
     ]
   },
-  "scripts": {
-    "dev": "vite",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "vite build",
-    "build:server": "vite build --config vite.config.server.ts",
-    "start": "node dist/server/index.mjs",
-    "test": "vitest --run",
-    "test:db": "cd server && npx tsx scripts/testConnection.ts",
-    "format.fix": "prettier --write .",
-    "typecheck": "tsc"
-  },
+"scripts": {
+  "dev": "vite",
+  "build": "npm run build:client && npm run build:server",
+  "build:client": "vite build",
+  "build:server": "vite build --config vite.config.server.ts",
+  "start": "node dist/server/start-server.mjs", 
+  "test": "vitest --run",
+  "test:db": "cd server && npx tsx scripts/testConnection.ts",
+  "format.fix": "prettier --write .",
+  "typecheck": "tsc"
+}
+,
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.10",
