@@ -13,7 +13,13 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { createApiUrl } from "@/lib/api-utils";
 
 export default function StaffLogin() {
   const [formData, setFormData] = useState({
@@ -33,7 +39,7 @@ export default function StaffLogin() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(createApiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +56,7 @@ export default function StaffLogin() {
       if (data.success) {
         // Use the login function from useAuth
         login(data.data.token, data.data.user);
-        
+
         // Redirect to staff admin panel for all staff members
         navigate("/staff-admin");
       } else {
@@ -66,7 +72,7 @@ export default function StaffLogin() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError(""); // Clear error when user types
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import Header from "../components/Header";
 import BottomNavigation from "../components/BottomNavigation";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface Category {
   _id?: string;
@@ -40,7 +41,7 @@ export default function Categories() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/categories");
+      const response = await fetch(createApiUrl("/api/categories"));
       const data = await response.json();
 
       if (data.success) {
@@ -55,7 +56,7 @@ export default function Categories() {
 
   const fetchPropertyCounts = async () => {
     try {
-      const response = await fetch("/api/properties");
+      const response = await fetch(createApiUrl("/api/properties"));
       const data = await response.json();
 
       if (data.success) {

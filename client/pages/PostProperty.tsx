@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ROHTAK_AREAS } from "@shared/types";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface PropertyFormData {
   title: string;
@@ -226,15 +227,16 @@ export default function PostProperty() {
       case 1:
         // Basic validation: title, description, property type are required
         // Subcategory is only required if property type is selected and options are available
-        const hasBasicInfo = formData.title.trim() &&
-                            formData.description.trim() &&
-                            formData.propertyType;
+        const hasBasicInfo =
+          formData.title.trim() &&
+          formData.description.trim() &&
+          formData.propertyType;
 
         if (!hasBasicInfo) return false;
 
         // If property type is selected, subcategory becomes required
         if (formData.propertyType && subCategories[formData.propertyType]) {
-          return formData.subCategory.trim() !== '';
+          return formData.subCategory.trim() !== "";
         }
 
         return true;
@@ -245,7 +247,7 @@ export default function PostProperty() {
           formData.location.address.trim()
         );
       case 3:
-        return formData.specifications.area.trim() !== '';
+        return formData.specifications.area.trim() !== "";
       case 4:
         return formData.images.length > 0;
       case 5:
@@ -270,11 +272,14 @@ export default function PostProperty() {
         if (!formData.title.trim()) missingFields.push("Property Title");
         if (!formData.description.trim()) missingFields.push("Description");
         if (!formData.propertyType) missingFields.push("Property Type");
-        if (formData.propertyType && !formData.subCategory) missingFields.push("Sub Category");
+        if (formData.propertyType && !formData.subCategory)
+          missingFields.push("Sub Category");
       }
 
       if (missingFields.length > 0) {
-        alert(`Please fill the following required fields: ${missingFields.join(", ")}`);
+        alert(
+          `Please fill the following required fields: ${missingFields.join(", ")}`,
+        );
       } else {
         alert("Please fill all required fields");
       }
@@ -322,7 +327,7 @@ export default function PostProperty() {
         submitData.append(`images`, image);
       });
 
-      const response = await fetch("/api/properties", {
+      const response = await fetch(createApiUrl("/api/properties"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -348,7 +353,9 @@ export default function PostProperty() {
         if (withPackage) {
           setShowPackageSelection(true);
         } else {
-          alert("Property posted successfully and submitted for admin approval!");
+          alert(
+            "Property posted successfully and submitted for admin approval!",
+          );
           window.location.href = "/user-dashboard";
         }
       } else {
@@ -364,7 +371,7 @@ export default function PostProperty() {
 
   const handlePackageSelect = async (packageId: string) => {
     try {
-      const response = await fetch(`/api/packages/${packageId}`);
+      const response = await fetch(createApiUrl(`/api/packages/${packageId}`));
       const data = await response.json();
 
       if (data.success) {
@@ -494,7 +501,9 @@ export default function PostProperty() {
                   required
                 />
                 {!formData.title.trim() && (
-                  <p className="text-red-500 text-xs mt-1">Property title is required</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Property title is required
+                  </p>
                 )}
               </div>
 
@@ -510,7 +519,9 @@ export default function PostProperty() {
                     handleInputChange("subCategory", "");
                   }}
                 >
-                  <SelectTrigger className={!formData.propertyType ? "border-red-300" : ""}>
+                  <SelectTrigger
+                    className={!formData.propertyType ? "border-red-300" : ""}
+                  >
                     <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -534,7 +545,9 @@ export default function PostProperty() {
                       handleInputChange("subCategory", value)
                     }
                   >
-                    <SelectTrigger className={!formData.subCategory ? "border-red-300" : ""}>
+                    <SelectTrigger
+                      className={!formData.subCategory ? "border-red-300" : ""}
+                    >
                       <SelectValue placeholder="Select sub category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -546,7 +559,9 @@ export default function PostProperty() {
                     </SelectContent>
                   </Select>
                   {!formData.subCategory && (
-                    <p className="text-red-500 text-xs mt-1">Please select a sub category</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      Please select a sub category
+                    </p>
                   )}
                 </div>
               )}
@@ -561,12 +576,16 @@ export default function PostProperty() {
                     handleInputChange("description", e.target.value)
                   }
                   placeholder="Describe your property in detail..."
-                  className={!formData.description.trim() ? "border-red-300" : ""}
+                  className={
+                    !formData.description.trim() ? "border-red-300" : ""
+                  }
                   rows={4}
                   required
                 />
                 {!formData.description.trim() && (
-                  <p className="text-red-500 text-xs mt-1">Property description is required</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Property description is required
+                  </p>
                 )}
               </div>
             </div>
@@ -944,7 +963,10 @@ export default function PostProperty() {
                 <Input
                   value={formData.contactInfo.alternativePhone || ""}
                   onChange={(e) =>
-                    handleInputChange("contactInfo.alternativePhone", e.target.value)
+                    handleInputChange(
+                      "contactInfo.alternativePhone",
+                      e.target.value,
+                    )
                   }
                   placeholder="Enter alternative mobile number"
                 />
@@ -957,7 +979,10 @@ export default function PostProperty() {
                 <Input
                   value={formData.contactInfo.whatsappNumber || ""}
                   onChange={(e) =>
-                    handleInputChange("contactInfo.whatsappNumber", e.target.value)
+                    handleInputChange(
+                      "contactInfo.whatsappNumber",
+                      e.target.value,
+                    )
                   }
                   placeholder="Enter WhatsApp number"
                 />
@@ -1072,8 +1097,8 @@ export default function PostProperty() {
                           key={index}
                           className={`w-1.5 h-1.5 rounded-full transition-colors ${
                             index + 1 <= currentStep
-                              ? 'bg-[#C70000]'
-                              : 'bg-gray-300'
+                              ? "bg-[#C70000]"
+                              : "bg-gray-300"
                           }`}
                         />
                       ))}
@@ -1098,10 +1123,14 @@ export default function PostProperty() {
                     disabled={!validateStep(currentStep)}
                     className={`flex-1 py-3 text-sm font-medium flex items-center justify-center transition-all ${
                       validateStep(currentStep)
-                        ? 'bg-[#C70000] hover:bg-[#A60000] text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                        ? "bg-[#C70000] hover:bg-[#A60000] text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
                     }`}
-                    title={!validateStep(currentStep) ? 'Please fill all required fields' : ''}
+                    title={
+                      !validateStep(currentStep)
+                        ? "Please fill all required fields"
+                        : ""
+                    }
                   >
                     Next
                     <ChevronRight className="h-4 w-4 ml-1" />
@@ -1132,8 +1161,8 @@ export default function PostProperty() {
                         key={index}
                         className={`w-2.5 h-2.5 rounded-full transition-colors ${
                           index + 1 <= currentStep
-                            ? 'bg-[#C70000]'
-                            : 'bg-gray-300'
+                            ? "bg-[#C70000]"
+                            : "bg-gray-300"
                         }`}
                       />
                     ))}
@@ -1145,10 +1174,14 @@ export default function PostProperty() {
                   disabled={!validateStep(currentStep)}
                   className={`px-6 py-3 text-base min-w-[120px] flex items-center transition-all ${
                     validateStep(currentStep)
-                      ? 'bg-[#C70000] hover:bg-[#A60000] text-white'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
+                      ? "bg-[#C70000] hover:bg-[#A60000] text-white"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
                   }`}
-                  title={!validateStep(currentStep) ? 'Please fill all required fields' : ''}
+                  title={
+                    !validateStep(currentStep)
+                      ? "Please fill all required fields"
+                      : ""
+                  }
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />

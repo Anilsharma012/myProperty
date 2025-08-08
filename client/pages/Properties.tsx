@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import BottomNavigation from "../components/BottomNavigation";
 import { Button } from "../components/ui/button";
 import { Property } from "@shared/types";
+import { createApiUrl } from "@/lib/api-utils";
 
 export default function Properties() {
   const [searchParams] = useSearchParams();
@@ -25,7 +26,7 @@ export default function Properties() {
       if (category) params.append("propertyType", category);
       if (subcategory) params.append("subCategory", subcategory);
 
-      const response = await fetch(`/api/properties?${params}`);
+      const response = await fetch(createApiUrl(`/api/properties?${params}`));
       const data = await response.json();
 
       if (data.success) {

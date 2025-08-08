@@ -17,6 +17,7 @@ import { Input } from "../components/ui/input";
 import { ChatConversation, ChatMessage } from "@shared/chat-types";
 import { ApiResponse } from "@shared/types";
 import { useAuth } from "../hooks/useAuth";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface ConversationWithDetails extends ChatConversation {
   participantDetails: Array<{
@@ -56,7 +57,7 @@ export default function Chat() {
     if (!token) return;
 
     try {
-      const response = await fetch("/api/chat/conversations", {
+      const response = await fetch(createApiUrl("/api/chat/conversations"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -81,7 +82,7 @@ export default function Chat() {
 
     try {
       const response = await fetch(
-        `/api/chat/conversations/${convId}/messages`,
+        createApiUrl(`/api/chat/conversations/${convId}/messages`),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -139,7 +140,7 @@ export default function Chat() {
     setError("");
 
     try {
-      const response = await fetch("/api/chat/messages", {
+      const response = await fetch(createApiUrl("/api/chat/messages"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

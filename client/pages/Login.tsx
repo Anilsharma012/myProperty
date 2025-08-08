@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { ApiResponse } from "@shared/types";
+import { createApiUrl } from "@/lib/api-utils";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
@@ -36,7 +37,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/send-otp", {
+      const response = await fetch(createApiUrl("/api/auth/send-otp"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +65,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/verify-otp", {
+      const response = await fetch(createApiUrl("/api/auth/verify-otp"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +108,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(createApiUrl("/api/auth/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
