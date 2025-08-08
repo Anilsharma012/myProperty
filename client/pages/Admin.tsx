@@ -294,7 +294,7 @@ export default function Admin() {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(createApiUrl(url), {
+      const response = await fetch(url.startsWith('/') ? createApiUrl(url) : createApiUrl(`/${url}`), {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
