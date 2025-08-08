@@ -353,14 +353,18 @@ export function createServer() {
   const app = express();
 
   // CORS configuration with explicit origins for production
-  const allowedOrigins = [
+  const defaultAllowedOrigins = [
     "https://ashishproperty.netlify.app",
     "https://myproperty-production.up.railway.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8080",
-    // Add any other frontend domains here
   ];
+
+  // Allow environment variable to override allowed origins
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : defaultAllowedOrigins;
 
   app.use(
     cors({
