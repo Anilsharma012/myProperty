@@ -352,30 +352,67 @@ import {
 export function createServer() {
   const app = express();
 
- const ALLOWED_ORIGINS = [
+ // ---- CORS (put this immediately after: const app = express()) ----
+const RAW_ALLOWED_ORIGINS = [
   "https://ashishproperty.netlify.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
 
+// Normalize to lower + trim once
+const ALLOWED_SET = new Set(
+  RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase())
+);
+
+// Small helper to normalize origin header safely
+const normalizeOrigin = (o?: string | null) =>
+  (o || "").trim().toLowerCase();
+
+app.use((req, _res, next) => {
+  // debug line to Railway logs
+  console.log(
+    "🔍 CORS dbg",
+    JSON.stringify({
+      method: req.method,
+      path: req.path,
+      origin: req.get("origin") || null,
+      reqHeaders: req.get("access-control-request-headers") || null,
+    })
+  );
+  next();
+});
+
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true);               // mobile/curl
-      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-      cb(new Error("CORS: origin not allowed: " + origin));
+      // Allow no-origin (mobile apps, curl, same-origin SW)
+      if (!origin) return cb(null, true);
+
+      const o = normalizeOrigin(origin);
+      if (ALLOWED_SET.has(o)) return cb(null, true);
+
+      // log and block others
+      console.warn("🚫 CORS blocked:", origin);
+      return cb(new Error("CORS: origin not allowed"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+    ],
     exposedHeaders: ["Content-Length", "Content-Type"],
     maxAge: 86400,
     optionsSuccessStatus: 200,
   })
 );
 
-// Let cors handle preflight properly
+// Let cors handle ALL preflight paths before any other middleware
 app.options("*", cors());
+
 
 
   app.use(express.json({ limit: "1gb" }));
