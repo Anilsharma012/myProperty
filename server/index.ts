@@ -422,6 +422,11 @@ console.log("✅ CORS middleware installed");
   // Health check with database status
   app.get("/api/ping", async (req, res) => {
     const startTime = Date.now();
+      const allowedOrigins = [
+    "https://ashishproperty.netlify.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ];
 
     try {
       // Try to get database connection
@@ -1444,9 +1449,8 @@ console.log("✅ CORS middleware installed");
     getAdminUserPackages,
   );
 
-  // WebSocket debug routes
-  const { getWebSocketStatus, testWebSocketConnection } =
-  require("./routes/websocket-debug");
+
+ 
   app.get("/api/debug/websocket-status", getWebSocketStatus);
   app.post("/api/debug/websocket-test", testWebSocketConnection);
 
