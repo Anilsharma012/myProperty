@@ -351,67 +351,57 @@ import {
 
 export function createServer() {
   const app = express();
-
- // ---- CORS (put this immediately after: const app = express()) ----
+// ==== HARD CORS FIX (manual, no cors package) ====
 const RAW_ALLOWED_ORIGINS = [
   "https://ashishproperty.netlify.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
 
-// Normalize to lower + trim once
-const ALLOWED_SET = new Set(
-  RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase())
-);
+const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase()));
 
-// Small helper to normalize origin header safely
-const normalizeOrigin = (o?: string | null) =>
-  (o || "").trim().toLowerCase();
+function normalize(o?: string | null) {
+  return (o || "").trim().toLowerCase();
+}
 
-app.use((req, _res, next) => {
-  // debug line to Railway logs
-  console.log(
-    "🔍 CORS dbg",
-    JSON.stringify({
-      method: req.method,
-      path: req.path,
-      origin: req.get("origin") || null,
-      reqHeaders: req.get("access-control-request-headers") || null,
-    })
-  );
+app.use((req, res, next) => {
+  const origin = req.headers.origin as string | undefined;
+  const nOrigin = normalize(origin);
+
+  // Debug log to Railway
+  console.log("🔍 CORS", {
+    method: req.method,
+    path: req.path,
+    origin: origin || null,
+    nOrigin,
+  });
+
+  if (origin && ALLOWED.has(nOrigin)) {
+    // MUST echo exact origin (not *) when credentials=true
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin"); // cache correctness
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
+
+  // Always answer preflight cleanly
+  if (req.method === "OPTIONS") {
+    // If origin not allowed, 204 will still end preflight (browser will then block actual req)
+    return res.status(200).end();
+  }
+
   next();
 });
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      // Allow no-origin (mobile apps, curl, same-origin SW)
-      if (!origin) return cb(null, true);
 
-      const o = normalizeOrigin(origin);
-      if (ALLOWED_SET.has(o)) return cb(null, true);
-
-      // log and block others
-      console.warn("🚫 CORS blocked:", origin);
-      return cb(new Error("CORS: origin not allowed"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-    ],
-    exposedHeaders: ["Content-Length", "Content-Type"],
-    maxAge: 86400,
-    optionsSuccessStatus: 200,
-  })
-);
-
-// Let cors handle ALL preflight paths before any other middleware
-app.options("*", cors());
 
 
 
