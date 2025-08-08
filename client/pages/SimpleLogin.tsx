@@ -9,6 +9,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle } from 'lucide-react'
 import OLXStyleHeader from '../components/OLXStyleHeader';
 import GoogleAuth from '../components/GoogleAuth';
 import EmailVerification from '../components/EmailVerification';
+import { createApiUrl } from '@/lib/api-utils';
 
 export default function SimpleLogin() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function SimpleLogin() {
       console.log('Making request to:', endpoint);
       console.log('Payload:', payload);
 
-      const response = await fetch(endpoint, {
+      const response = await fetch(createApiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
