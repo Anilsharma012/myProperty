@@ -369,7 +369,9 @@ export function createServer() {
   app.use(
     cors({
       origin: function (origin, callback) {
-        console.log(`🔍 CORS Request - Origin: ${origin || 'no-origin'}, NODE_ENV: ${process.env.NODE_ENV}`);
+        console.log(
+          `🔍 CORS Request - Origin: ${origin || "no-origin"}, NODE_ENV: ${process.env.NODE_ENV}`,
+        );
 
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
@@ -378,7 +380,10 @@ export function createServer() {
         }
 
         // Allow all origins in development
-        if (process.env.NODE_ENV === "development" || process.env.NODE_ENV !== "production") {
+        if (
+          process.env.NODE_ENV === "development" ||
+          process.env.NODE_ENV !== "production"
+        ) {
           console.log(`✅ CORS: Allowing origin ${origin} (development mode)`);
           return callback(null, true);
         }
@@ -429,7 +434,9 @@ export function createServer() {
 
   // Request logging middleware for debugging
   app.use((req, res, next) => {
-    console.log(`📝 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'} - User-Agent: ${req.get('user-agent')?.substring(0, 50) || 'none'}`);
+    console.log(
+      `📝 ${req.method} ${req.path} - Origin: ${req.get("origin") || "none"} - User-Agent: ${req.get("user-agent")?.substring(0, 50) || "none"}`,
+    );
     next();
   });
 
@@ -1163,12 +1170,10 @@ export function createServer() {
         }
       } catch (error) {
         console.error("Error marking notification as read:", error);
-        res
-          .status(500)
-          .json({
-            success: false,
-            error: "Failed to mark notification as read",
-          });
+        res.status(500).json({
+          success: false,
+          error: "Failed to mark notification as read",
+        });
       }
     },
   );

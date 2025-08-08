@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { api } from '@/lib/api';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { api } from "@/lib/api";
 
 export default function CorsTest() {
   const [result, setResult] = useState<any>(null);
@@ -15,12 +15,12 @@ export default function CorsTest() {
     setResult(null);
 
     try {
-      console.log('🧪 Testing API connection...');
-      const response = await api.get('ping');
-      console.log('✅ API test successful:', response);
+      console.log("🧪 Testing API connection...");
+      const response = await api.get("ping");
+      console.log("✅ API test successful:", response);
       setResult(response.data);
     } catch (err: any) {
-      console.error('❌ API test failed:', err);
+      console.error("❌ API test failed:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -33,15 +33,15 @@ export default function CorsTest() {
     setResult(null);
 
     try {
-      console.log('🧪 Testing auth endpoint...');
-      const response = await api.post('auth/login', {
-        email: 'admin@ashishproperty.com',
-        password: 'admin123'
+      console.log("🧪 Testing auth endpoint...");
+      const response = await api.post("auth/login", {
+        email: "admin@ashishproperty.com",
+        password: "admin123",
       });
-      console.log('✅ Auth test successful:', response);
+      console.log("✅ Auth test successful:", response);
       setResult(response.data);
     } catch (err: any) {
-      console.error('❌ Auth test failed:', err);
+      console.error("❌ Auth test failed:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -56,20 +56,20 @@ export default function CorsTest() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4">
-            <Button 
-              onClick={testApiConnection} 
+            <Button
+              onClick={testApiConnection}
               disabled={loading}
               variant="outline"
             >
-              {loading ? 'Testing...' : 'Test Ping API'}
+              {loading ? "Testing..." : "Test Ping API"}
             </Button>
-            
-            <Button 
-              onClick={testAuthLogin} 
+
+            <Button
+              onClick={testAuthLogin}
               disabled={loading}
               variant="outline"
             >
-              {loading ? 'Testing...' : 'Test Auth API'}
+              {loading ? "Testing..." : "Test Auth API"}
             </Button>
           </div>
 
