@@ -352,101 +352,30 @@ import {
 export function createServer() {
   const app = express();
 
-  // CORS configuration with explicit origins for production
-  // const defaultAllowedOrigins = [
-  //   "https://ashishproperty.netlify.app",
-  //   "https://myproperty-production.up.railway.app",
-  //   "http://localhost:3000",
-  //   "http://localhost:5173",
-  //   "http://localhost:8080",
-  // ];
+ const ALLOWED_ORIGINS = [
+  "https://ashishproperty.netlify.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
-  // // Allow environment variable to override allowed origins
-  // const allowedOrigins = process.env.ALLOWED_ORIGINS
-  //   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
-  //   : defaultAllowedOrigins;
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);               // mobile/curl
+      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      cb(new Error("CORS: origin not allowed: " + origin));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    exposedHeaders: ["Content-Length", "Content-Type"],
+    maxAge: 86400,
+    optionsSuccessStatus: 200,
+  })
+);
 
-  // app.use(
-  //   cors({
-  //     origin: function (origin, callback) {
-  //       console.log(
-  //         `🔍 CORS Request - Origin: ${origin || "no-origin"}, NODE_ENV: ${process.env.NODE_ENV}`,
-  //       );
-
-  //       // Allow requests with no origin (like mobile apps or curl requests)
-  //       if (!origin) {
-  //         console.log(`✅ CORS: Allowing request with no origin`);
-  //         return callback(null, true);
-  //       }
-
-  //       // Allow all origins in development
-  //       if (
-  //         process.env.NODE_ENV === "development" ||
-  //         process.env.NODE_ENV !== "production"
-  //       ) {
-  //         console.log(`✅ CORS: Allowing origin ${origin} (development mode)`);
-  //         return callback(null, true);
-  //       }
-
-  //       // Check if the origin is in our allowed list
-  //       if (allowedOrigins.includes(origin)) {
-  //         console.log(`✅ CORS: Allowing origin ${origin} (in allowed list)`);
-  //         return callback(null, true);
-  //       }
-
-  //       // For production, log the blocked origin for debugging
-  //       console.warn(`🚫 CORS blocked origin: ${origin}`);
-  //       console.warn(`📋 Allowed origins:`, allowedOrigins);
-  //       callback(new Error("Not allowed by CORS"));
-  //     },
-  //     credentials: true,
-  //     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  //     allowedHeaders: [
-  //       "Content-Type",
-  //       "Authorization",
-  //       "X-Requested-With",
-  //       "Accept",
-  //       "Origin",
-  //       "Access-Control-Request-Method",
-  //       "Access-Control-Request-Headers",
-  //     ],
-  //     exposedHeaders: ["Content-Length", "Content-Type"],
-  //     maxAge: 86400, // 24 hours
-  //     optionsSuccessStatus: 200, // Some legacy browsers choke on 204
-  //   }),
-  // );
-
-  // // Handle preflight OPTIONS requests explicitly
-  // app.options("*", (req, res) => {
-  //   res.header("Access-Control-Allow-Origin", req.get("origin") || "*");
-  //   res.header(
-  //     "Access-Control-Allow-Methods",
-  //     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-  //   );
-  //   res.header(
-  //     "Access-Control-Allow-Headers",
-  //     "Content-Type,Authorization,X-Requested-With,Accept,Origin",
-  //   );
-  //   res.header("Access-Control-Allow-Credentials", "true");
-  //   res.header("Access-Control-Max-Age", "86400");
-  //   res.status(200).end();
-  // });
-
-  // // Request logging middleware for debugging
-  // app.use((req, res, next) => {
-  //   console.log(
-  //     `📝 ${req.method} ${req.path} - Origin: ${req.get("origin") || "none"} - User-Agent: ${req.get("user-agent")?.substring(0, 50) || "none"}`,
-  //   );
-  //   next();
-  // });
-
-
-  app.use(cors({
-  origin: ['https://ashishproperty.netlify.app', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-}));
-app.options('*', cors()); // let cors handle preflight
+// Let cors handle preflight properly
+app.options("*", cors());
 
 
   app.use(express.json({ limit: "1gb" }));
