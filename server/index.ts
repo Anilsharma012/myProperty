@@ -351,35 +351,27 @@ import {
 
 export function createServer() {
   const app = express();
-// ==== HARD CORS FIX (manual, no cors package) ====
 const RAW_ALLOWED_ORIGINS = [
   "https://ashishproperty.netlify.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
 
-const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase()));
+const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.toLowerCase().trim()));
 
 function normalize(o?: string | null) {
-  return (o || "").trim().toLowerCase();
+  return (o || "").toLowerCase().trim().replace(/\/$/, ""); // remove trailing slash
 }
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin as string | undefined;
+  const origin = req.headers.origin || "";
   const nOrigin = normalize(origin);
 
-  // Debug log to Railway
-  console.log("🔍 CORS", {
-    method: req.method,
-    path: req.path,
-    origin: origin || null,
-    nOrigin,
-  });
+  console.log("🔍 CORS Check:", { origin, normalized: nOrigin });
 
-  if (origin && ALLOWED.has(nOrigin)) {
-    // MUST echo exact origin (not *) when credentials=true
+  if (ALLOWED.has(nOrigin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin"); // cache correctness
+    res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader(
       "Access-Control-Allow-Headers",
@@ -387,19 +379,18 @@ app.use((req, res, next) => {
     );
     res.setHeader(
       "Access-Control-Allow-Methods",
-      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     );
-    res.setHeader("Access-Control-Max-Age", "86400");
   }
 
-  // Always answer preflight cleanly
+  // Always handle OPTIONS cleanly
   if (req.method === "OPTIONS") {
-    // If origin not allowed, 204 will still end preflight (browser will then block actual req)
     return res.status(200).end();
   }
 
   next();
 });
+
 
 
 
