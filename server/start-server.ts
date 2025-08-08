@@ -1,41 +1,38 @@
 // server/start-server.ts
-
 import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 import { ChatWebSocketServer } from "./websocket";
 import { connectToDatabase } from "./db/mongodb";
 
-const PORT = process.env.PORT || 8080;
-
 async function startServer() {
   try {
-    // Initialize database connection first
     console.log("🔄 Initializing database connection...");
     await connectToDatabase();
     console.log("✅ Database connection established");
 
-    // Create and start the server
     const app = createServer();
-    const server = app.listen(PORT, () => {
-      console.log(`✅ Server running on http://localhost:${PORT}`);
+
+    // Railway always sets PORT env. Don't fallback to 8080 here.
+    const raw = process.env.PORT;
+    const PORT = raw ? Number(raw) : NaN;
+    if (!PORT || Number.isNaN(PORT)) {
+      console.error("❌ PORT env missing. Railway needs the app to listen on PORT.");
+      process.exit(1);
+    }
+
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`✅ Server listening on PORT=${PORT}`);
       console.log("🚀 All services ready to accept requests");
     });
 
-    // Initialize services after server is running
     initializePushNotifications(server);
     initializePackageSync(server);
-
-    // Initialize chat WebSocket server
-    const chatWS = new ChatWebSocketServer(server);
-    console.log('💬 Chat WebSocket server initialized');
-
-  } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    new ChatWebSocketServer(server);
+    console.log("💬 Chat WebSocket server initialized");
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
     console.log("🔄 Retrying in 5 seconds...");
-
-    // Retry after 5 seconds
     setTimeout(startServer, 5000);
   }
 }
 
-// Start the server
 startServer();
