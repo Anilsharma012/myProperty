@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Eye, EyeOff, Mail, Phone, Lock } from "lucide-react";
 import OLXStyleHeader from "../components/OLXStyleHeader";
+import { createApiUrl } from "@/lib/api-utils";
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -30,11 +31,11 @@ const UserLogin = () => {
     const testServerConnection = async () => {
       try {
         console.log("🔍 Testing server connectivity...");
-        const response = await fetch('/api/ping');
+        const response = await fetch(createApiUrl('/api/ping'));
         const data = await response.json();
         console.log("✅ Server ping successful:", data);
       } catch (error) {
-        console.error("❌ Server ping failed:", error);
+        console.error("�� Server ping failed:", error);
       }
     };
 
