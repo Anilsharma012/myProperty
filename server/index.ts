@@ -404,6 +404,16 @@ export function createServer() {
   );
 
 
+  // Handle preflight OPTIONS requests explicitly
+  app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.get('origin') || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
+    res.status(200).end();
+  });
+
   app.use(express.json({ limit: "1gb" }));
   app.use(express.urlencoded({ extended: true, limit: "1gb" }));
 
