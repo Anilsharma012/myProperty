@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, User, Eye, Share2, Edit } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import OLXStyleHeader from "../components/OLXStyleHeader";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface PageContent {
   _id: string;
@@ -45,7 +46,7 @@ export default function DynamicPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(`/api/content/pages/slug/${pageSlug}`);
+      const response = await fetch(createApiUrl(`/api/content/pages/slug/${pageSlug}`));
       
       if (response.ok) {
         const data: ApiResponse<PageContent> = await response.json();
@@ -90,7 +91,7 @@ export default function DynamicPage() {
 
   const trackPageView = async (pageId: string) => {
     try {
-      await fetch(`/api/content/pages/${pageId}/view`, {
+      await fetch(createApiUrl(`/api/content/pages/${pageId}/view`), {
         method: 'POST',
       });
     } catch (error) {
