@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ROHTAK_AREAS } from "@shared/types";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface PropertyFormData {
   title: string;
