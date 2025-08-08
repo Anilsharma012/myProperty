@@ -352,10 +352,40 @@ import {
 export function createServer() {
   const app = express();
 
-  // Allow all origins for CORS (as requested)
+  // CORS configuration with explicit origins for production
+  const defaultAllowedOrigins = [
+    "https://ashishproperty.netlify.app",
+    "https://myproperty-production.up.railway.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+  ];
+
+  // Allow environment variable to override allowed origins
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+    : defaultAllowedOrigins;
+
   app.use(
     cors({
-      origin: true, // Allow all origins
+      origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Allow all origins in development
+        if (process.env.NODE_ENV === "development") {
+          return callback(null, true);
+        }
+
+        // Check if the origin is in our allowed list
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        // For production, log the blocked origin for debugging
+        console.warn(`🚫 CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: [
@@ -365,13 +395,29 @@ export function createServer() {
         "Accept",
         "Origin",
         "Access-Control-Request-Method",
-        "Access-Control-Request-Headers"
+        "Access-Control-Request-Headers",
       ],
       exposedHeaders: ["Content-Length", "Content-Type"],
       maxAge: 86400, // 24 hours
-    })
+      optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+    }),
   );
 
+  // Handle preflight OPTIONS requests explicitly
+  app.options("*", (req, res) => {
+    res.header("Access-Control-Allow-Origin", req.get("origin") || "*");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type,Authorization,X-Requested-With,Accept,Origin",
+    );
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Max-Age", "86400");
+    res.status(200).end();
+  });
 
   app.use(express.json({ limit: "1gb" }));
   app.use(express.urlencoded({ extended: true, limit: "1gb" }));
@@ -443,6 +489,13 @@ export function createServer() {
           ip: req.ip || req.connection.remoteAddress,
           method: req.method,
           url: req.url,
+        },
+        cors: {
+          allowedOrigins: allowedOrigins,
+          currentOrigin: req.get("origin"),
+          isOriginAllowed: req.get("origin")
+            ? allowedOrigins.includes(req.get("origin"))
+            : true,
         },
         timestamp: new Date().toISOString(),
       };
@@ -757,19 +810,19 @@ export function createServer() {
     "/api/admin/payment-settings",
     authenticateToken,
     requireAdmin,
-    getPaymentSettings
+    getPaymentSettings,
   );
   app.put(
     "/api/admin/payment-settings",
     authenticateToken,
     requireAdmin,
-    updatePaymentSettings
+    updatePaymentSettings,
   );
   app.post(
     "/api/admin/payment-settings/test-razorpay",
     authenticateToken,
     requireAdmin,
-    testRazorpayConnection
+    testRazorpayConnection,
   );
   app.get("/api/payments/active-methods", getActivePaymentMethods);
 
@@ -1076,22 +1129,34 @@ export function createServer() {
     authenticateToken,
     async (req, res) => {
       try {
-        const { pushNotificationService } = await import("./services/pushNotificationService");
+        const { pushNotificationService } = await import(
+          "./services/pushNotificationService"
+        );
         const userId = (req as any).userId;
         const { notificationId } = req.params;
 
-        const success = await pushNotificationService.markNotificationAsRead(userId, notificationId);
+        const success = await pushNotificationService.markNotificationAsRead(
+          userId,
+          notificationId,
+        );
 
         if (success) {
           res.json({ success: true, message: "Notification marked as read" });
         } else {
-          res.status(404).json({ success: false, error: "Notification not found" });
+          res
+            .status(404)
+            .json({ success: false, error: "Notification not found" });
         }
       } catch (error) {
         console.error("Error marking notification as read:", error);
-        res.status(500).json({ success: false, error: "Failed to mark notification as read" });
+        res
+          .status(500)
+          .json({
+            success: false,
+            error: "Failed to mark notification as read",
+          });
       }
-    }
+    },
   );
 
   // Homepage slider management routes
@@ -1330,22 +1395,75 @@ export function createServer() {
   app.get("/api/footer/test", testFooterData);
 
   // Custom fields routes
-  app.get("/api/admin/custom-fields", authenticateToken, requireAdmin, getAllCustomFields);
-  app.get("/api/admin/custom-fields/:fieldId", authenticateToken, requireAdmin, getCustomFieldById);
-  app.post("/api/admin/custom-fields", authenticateToken, requireAdmin, createCustomField);
-  app.put("/api/admin/custom-fields/:fieldId", authenticateToken, requireAdmin, updateCustomField);
-  app.delete("/api/admin/custom-fields/:fieldId", authenticateToken, requireAdmin, deleteCustomField);
-  app.put("/api/admin/custom-fields/:fieldId/status", authenticateToken, requireAdmin, updateCustomFieldStatus);
-  app.put("/api/admin/custom-fields/reorder", authenticateToken, requireAdmin, reorderCustomFields);
+  app.get(
+    "/api/admin/custom-fields",
+    authenticateToken,
+    requireAdmin,
+    getAllCustomFields,
+  );
+  app.get(
+    "/api/admin/custom-fields/:fieldId",
+    authenticateToken,
+    requireAdmin,
+    getCustomFieldById,
+  );
+  app.post(
+    "/api/admin/custom-fields",
+    authenticateToken,
+    requireAdmin,
+    createCustomField,
+  );
+  app.put(
+    "/api/admin/custom-fields/:fieldId",
+    authenticateToken,
+    requireAdmin,
+    updateCustomField,
+  );
+  app.delete(
+    "/api/admin/custom-fields/:fieldId",
+    authenticateToken,
+    requireAdmin,
+    deleteCustomField,
+  );
+  app.put(
+    "/api/admin/custom-fields/:fieldId/status",
+    authenticateToken,
+    requireAdmin,
+    updateCustomFieldStatus,
+  );
+  app.put(
+    "/api/admin/custom-fields/reorder",
+    authenticateToken,
+    requireAdmin,
+    reorderCustomFields,
+  );
   app.post("/api/custom-fields/initialize", initializeCustomFields);
 
   // Admin notification and package management routes
-  app.post("/api/admin/send-notification", authenticateToken, requireAdmin, sendNotification);
-  app.get("/api/admin/packages", authenticateToken, requireAdmin, getAdminPackages);
-  app.get("/api/admin/user-packages", authenticateToken, requireAdmin, getAdminUserPackages);
+  app.post(
+    "/api/admin/send-notification",
+    authenticateToken,
+    requireAdmin,
+    sendNotification,
+  );
+  app.get(
+    "/api/admin/packages",
+    authenticateToken,
+    requireAdmin,
+    getAdminPackages,
+  );
+  app.get(
+    "/api/admin/user-packages",
+    authenticateToken,
+    requireAdmin,
+    getAdminUserPackages,
+  );
 
   // WebSocket debug routes
-  const { getWebSocketStatus, testWebSocketConnection } = require("./routes/websocket-debug");
+  const {
+    getWebSocketStatus,
+    testWebSocketConnection,
+  } = require("./routes/websocket-debug");
   app.get("/api/debug/websocket-status", getWebSocketStatus);
   app.post("/api/debug/websocket-test", testWebSocketConnection);
 
@@ -1355,7 +1473,10 @@ export function createServer() {
 
   // Health check endpoint for network monitoring
   app.get("/api/health", databaseHealthCheck, (req, res) => {
-    const dbStatus = req.databaseStatus || { connected: false, responsive: false };
+    const dbStatus = req.databaseStatus || {
+      connected: false,
+      responsive: false,
+    };
 
     res.json({
       status: dbStatus.connected && dbStatus.responsive ? "ok" : "degraded",
@@ -1365,8 +1486,8 @@ export function createServer() {
       database: {
         connected: dbStatus.connected,
         responsive: dbStatus.responsive,
-        error: dbStatus.error
-      }
+        error: dbStatus.error,
+      },
     });
   });
 
@@ -1376,13 +1497,13 @@ export function createServer() {
 // Initialize push notification service
 export function initializePushNotifications(server: any) {
   pushNotificationService.initialize(server);
-  console.log('📱 Push notification service initialized');
+  console.log("📱 Push notification service initialized");
 }
 
 // Initialize package sync service
 export function initializePackageSync(server: any) {
   packageSyncService.initialize(server);
-  console.log('📦 Package sync service initialized');
+  console.log("📦 Package sync service initialized");
 }
 
 // For production
