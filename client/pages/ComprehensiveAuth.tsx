@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
+import { createApiUrl } from "@/lib/api-utils";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -95,7 +96,7 @@ const ComprehensiveAuth = () => {
 
       console.log(`Making ${isLogin ? 'login' : 'registration'} request...`);
       
-      const response = await fetch(`/api/${endpoint}`, {
+      const response = await fetch(createApiUrl(`/api/${endpoint}`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,7 +152,7 @@ const ComprehensiveAuth = () => {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/send-otp", {
+      const response = await fetch(createApiUrl("/api/auth/send-otp"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,7 +188,7 @@ const ComprehensiveAuth = () => {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/verify-otp", {
+      const response = await fetch(createApiUrl("/api/auth/verify-otp"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -243,7 +244,7 @@ const ComprehensiveAuth = () => {
         family_name: "User"
       };
 
-      const response = await fetch("/api/auth/google", {
+      const response = await fetch(createApiUrl("/api/auth/google"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
