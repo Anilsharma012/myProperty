@@ -77,7 +77,10 @@ const App = () => (
               <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/post-property" element={<PostProperty />} />
               <Route path="/seller-dashboard" element={<SellerDashboard />} />
-              <Route path="/enhanced-seller-dashboard" element={<EnhancedSellerDashboard />} />
+              <Route
+                path="/enhanced-seller-dashboard"
+                element={<EnhancedSellerDashboard />}
+              />
               <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
               <Route path="/agent-dashboard" element={<AgentDashboard />} />
               <Route path="/admin" element={<Admin />} />
@@ -96,11 +99,30 @@ const App = () => (
               <Route path="/footer-test" element={<FooterTest />} />
               <Route path="/footer-debug" element={<FooterDebugPage />} />
               {/* Debug Push Notifications */}
-              <Route path="/debug-push-notifications" element={<DebugPushNotifications />} />
+              <Route
+                path="/debug-push-notifications"
+                element={<DebugPushNotifications />}
+              />
               {/* Package System Test */}
-              <Route path="/test-packages" element={<div className="min-h-screen bg-gray-50 py-8"><div className="container mx-auto px-4"><PackageSystemTest /></div></div>} />
+              <Route
+                path="/test-packages"
+                element={
+                  <div className="min-h-screen bg-gray-50 py-8">
+                    <div className="container mx-auto px-4">
+                      <PackageSystemTest />
+                    </div>
+                  </div>
+                }
+              />
               {/* Package Debug Test */}
-              <Route path="/debug-packages" element={<div className="min-h-screen bg-gray-50 py-8"><PackageDebugTest /></div>} />
+              <Route
+                path="/debug-packages"
+                element={
+                  <div className="min-h-screen bg-gray-50 py-8">
+                    <PackageDebugTest />
+                  </div>
+                }
+              />
               {/* Dynamic Pages from Admin */}
               <Route path="/page/:slug" element={<DynamicPage />} />
               <Route path="/:slug" element={<ContentPage />} />

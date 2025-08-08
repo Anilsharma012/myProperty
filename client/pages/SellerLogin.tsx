@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { ArrowLeft, Store, Mail, Phone, AlertCircle, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Store,
+  Mail,
+  Phone,
+  AlertCircle,
+  Users,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -207,7 +214,7 @@ export default function SellerLogin() {
           <p className="text-sm text-gray-600">
             Don't have a seller account?{" "}
             <button
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => (window.location.href = "/auth")}
               className="font-medium text-[#C70000] hover:text-[#A60000] transition-colors"
             >
               Register here
