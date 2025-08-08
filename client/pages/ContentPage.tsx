@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Button } from "../components/ui/button";
 import Footer from "../components/Footer";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface ContentPageData {
   _id: string;
@@ -32,7 +33,7 @@ export default function ContentPage() {
   const fetchPage = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/content/${slug}`);
+      const response = await fetch(createApiUrl(`/api/content/${slug}`));
       
       if (response.ok) {
         const data = await response.json();
