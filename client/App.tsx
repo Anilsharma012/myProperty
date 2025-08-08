@@ -42,6 +42,7 @@ import DebugPushNotifications from "./pages/DebugPushNotifications";
 import PackageSystemTest from "./components/PackageSystemTest";
 import PackageDebugTest from "./components/PackageDebugTest";
 import NetworkStatus from "./components/NetworkStatus";
+import CorsTest from "./pages/CorsTest";
 
 const queryClient = new QueryClient();
 
