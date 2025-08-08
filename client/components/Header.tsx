@@ -135,7 +135,7 @@ export default function Header() {
             size="sm"
             variant="outline"
             className="bg-white text-[#C70000] border-white hover:bg-gray-100"
-            onClick={() => (window.location.href = "/login?type=seller")}
+            onClick={() => (window.location.href = "/seller/login")}
           >
             Login as Seller
           </Button>
@@ -185,7 +185,7 @@ export default function Header() {
                 size="sm"
                 variant="outline"
                 className="bg-white text-[#C70000] border-white hover:bg-gray-100"
-                onClick={() => (window.location.href = "/login?type=seller")}
+                onClick={() => (window.location.href = "/seller/login")}
               >
                 Login as Seller
               </Button>
@@ -290,7 +290,7 @@ export default function Header() {
             size="sm"
             variant="outline"
             className="bg-white text-[#C70000] border-white hover:bg-gray-100 text-xs px-2"
-            onClick={() => (window.location.href = "/login?type=seller")}
+            onClick={() => (window.location.href = "/seller/login")}
           >
             Seller
           </Button>
