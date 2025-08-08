@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { createApiUrl } from '@/lib/api-utils';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -80,16 +81,16 @@ const EnhancedAdminDashboard: React.FC = () => {
       
       // Fetch dashboard statistics
       const [usersRes, propertiesRes, packagesRes, userPackagesRes] = await Promise.all([
-        fetch('/api/admin/users?limit=1000', {
+        fetch(createApiUrl('/api/admin/users?limit=1000'), {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('/api/admin/properties', {
+        fetch(createApiUrl('/api/admin/properties'), {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('/api/admin/packages', {
+        fetch(createApiUrl('/api/admin/packages'), {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('/api/admin/user-packages', {
+        fetch(createApiUrl('/api/admin/user-packages'), {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
