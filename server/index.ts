@@ -7,6 +7,7 @@ import { ensureDatabase, databaseHealthCheck } from "./middleware/database";
 import { ChatWebSocketServer } from "./websocket";
 import { pushNotificationService } from "./services/pushNotificationService";
 import { packageSyncService } from "./services/packageSyncService";
+import { getWebSocketStatus, testWebSocketConnection } from "./routes/websocket-debug";
 
 // Property routes
 import {
@@ -1444,10 +1445,8 @@ console.log("✅ CORS middleware installed");
   );
 
   // WebSocket debug routes
-  const {
-    getWebSocketStatus,
-    testWebSocketConnection,
-  } = require("./routes/websocket-debug");
+  const { getWebSocketStatus, testWebSocketConnection } =
+  require("./routes/websocket-debug");
   app.get("/api/debug/websocket-status", getWebSocketStatus);
   app.post("/api/debug/websocket-test", testWebSocketConnection);
 
