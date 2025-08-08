@@ -323,7 +323,7 @@ export default function PostProperty() {
         submitData.append(`images`, image);
       });
 
-      const response = await fetch("/api/properties", {
+      const response = await fetch(createApiUrl("/api/properties"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -365,7 +365,7 @@ export default function PostProperty() {
 
   const handlePackageSelect = async (packageId: string) => {
     try {
-      const response = await fetch(`/api/packages/${packageId}`);
+      const response = await fetch(createApiUrl(`/api/packages/${packageId}`));
       const data = await response.json();
 
       if (data.success) {
