@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { Property } from '@shared/types';
 import { api } from '../lib/api';
+import { createApiUrl } from '@/lib/api-utils';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -77,7 +78,7 @@ export default function BuyerDashboard() {
       }
 
       // Fetch featured properties for buyers
-      const propertiesResponse = await fetch('/api/properties/featured');
+      const propertiesResponse = await fetch(createApiUrl('/api/properties/featured'));
       if (propertiesResponse.ok) {
         const propertiesData = await propertiesResponse.json();
         if (propertiesData.success) {
