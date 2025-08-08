@@ -352,10 +352,36 @@ import {
 export function createServer() {
   const app = express();
 
-  // Allow all origins for CORS (as requested)
+  // CORS configuration with explicit origins for production
+  const allowedOrigins = [
+    "https://ashishproperty.netlify.app",
+    "https://myproperty-production.up.railway.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+    // Add any other frontend domains here
+  ];
+
   app.use(
     cors({
-      origin: true, // Allow all origins
+      origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Allow all origins in development
+        if (process.env.NODE_ENV === "development") {
+          return callback(null, true);
+        }
+
+        // Check if the origin is in our allowed list
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        // For production, log the blocked origin for debugging
+        console.warn(`🚫 CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: [
@@ -369,6 +395,7 @@ export function createServer() {
       ],
       exposedHeaders: ["Content-Length", "Content-Type"],
       maxAge: 86400, // 24 hours
+      optionsSuccessStatus: 200 // Some legacy browsers choke on 204
     })
   );
 
