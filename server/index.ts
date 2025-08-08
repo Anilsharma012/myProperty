@@ -369,21 +369,29 @@ export function createServer() {
   app.use(
     cors({
       origin: function (origin, callback) {
+        console.log(`🔍 CORS Request - Origin: ${origin || 'no-origin'}, NODE_ENV: ${process.env.NODE_ENV}`);
+
         // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
+        if (!origin) {
+          console.log(`✅ CORS: Allowing request with no origin`);
+          return callback(null, true);
+        }
 
         // Allow all origins in development
-        if (process.env.NODE_ENV === "development") {
+        if (process.env.NODE_ENV === "development" || process.env.NODE_ENV !== "production") {
+          console.log(`✅ CORS: Allowing origin ${origin} (development mode)`);
           return callback(null, true);
         }
 
         // Check if the origin is in our allowed list
         if (allowedOrigins.includes(origin)) {
+          console.log(`✅ CORS: Allowing origin ${origin} (in allowed list)`);
           return callback(null, true);
         }
 
         // For production, log the blocked origin for debugging
         console.warn(`🚫 CORS blocked origin: ${origin}`);
+        console.warn(`📋 Allowed origins:`, allowedOrigins);
         callback(new Error("Not allowed by CORS"));
       },
       credentials: true,
