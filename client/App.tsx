@@ -104,6 +104,8 @@ const App = () => (
                 path="/debug-push-notifications"
                 element={<DebugPushNotifications />}
               />
+              {/* CORS Test */}
+              <Route path="/cors-test" element={<CorsTest />} />
               {/* Package System Test */}
               <Route
                 path="/test-packages"
