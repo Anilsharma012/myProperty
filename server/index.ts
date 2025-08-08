@@ -351,43 +351,55 @@ import {
 
 export function createServer() {
   const app = express();
+console.log("🟢 Installing CORS middleware...");
+
 const RAW_ALLOWED_ORIGINS = [
-    "https://ashishproperty.netlify.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-  ];
+  "https://ashishproperty.netlify.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
-  const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase()));
-  function normalize(o?: string | null) {
-    return (o || "").trim().toLowerCase().replace(/\/$/, "");
+const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase()));
+const normalize = (o?: string | null) =>
+  (o || "").trim().toLowerCase().replace(/\/$/, "");
+
+const setCors = (req: any, res: any) => {
+  const origin = req.headers.origin || "";
+  const nOrigin = normalize(origin);
+
+  // Debug:
+  console.log("🔍 CORS Check:", { origin, normalized: nOrigin, method: req.method, path: req.path });
+
+  if (ALLOWED.has(nOrigin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin); // echo exact
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
   }
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Max-Age", "86400");
+};
 
-  app.use((req, res, next) => {
-    const origin = req.headers.origin || "";
-    const nOrigin = normalize(origin);
+app.use((req, res, next) => {
+  setCors(req, res);
+  if (req.method === "OPTIONS") return res.status(204).end();
+  next();
+});
 
-    console.log("🔍 CORS Check:", { origin, normalized: nOrigin });
+// Belt & suspenders: make sure ANY path preflight is answered
+app.options("*", (req, res) => {
+  setCors(req, res);
+  return res.status(204).end();
+});
 
-    if (ALLOWED.has(nOrigin)) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Vary", "Origin");
-      res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-      );
-      res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-      );
-    }
+console.log("✅ CORS middleware installed");
 
-    if (req.method === "OPTIONS") {
-      return res.status(200).end();
-    }
-
-    next();
-  });
 
 
 
