@@ -36,7 +36,7 @@ export default function AdminLogin() {
     const response = await fetch(createApiUrl("auth/login"), {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
+          "Content-Type": "application/json",
         },
          credentials: "include",
         body: JSON.stringify(loginData),
