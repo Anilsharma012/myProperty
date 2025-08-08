@@ -14,6 +14,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { createApiUrl } from "@/lib/api-utils";
 
 export default function StaffLogin() {
   const [formData, setFormData] = useState({
@@ -33,7 +34,7 @@ export default function StaffLogin() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(createApiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
