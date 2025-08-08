@@ -427,6 +427,12 @@ export function createServer() {
     res.status(200).end();
   });
 
+  // Request logging middleware for debugging
+  app.use((req, res, next) => {
+    console.log(`📝 ${req.method} ${req.path} - Origin: ${req.get('origin') || 'none'} - User-Agent: ${req.get('user-agent')?.substring(0, 50) || 'none'}`);
+    next();
+  });
+
   app.use(express.json({ limit: "1gb" }));
   app.use(express.urlencoded({ extended: true, limit: "1gb" }));
 
