@@ -33,6 +33,7 @@ import FAQManagement from "../components/admin/FAQManagement";
 import UserManagement from "../components/admin/UserManagement";
 import AllUsersManagement from "../components/AllUsersManagement";
 import PropertyManagement from "../components/admin/PropertyManagement";
+import { createApiUrl } from "@/lib/api-utils";
 import CompletePropertyManagement from "../components/admin/CompletePropertyManagement";
 import CustomFieldsManagement from "../components/admin/CustomFieldsManagement";
 import CategoryManagement from "../components/admin/CategoryManagement";
@@ -214,7 +215,7 @@ export default function Admin() {
 
         console.log(`🔍 Testing connectivity (attempt ${retryCount + 1}/${maxRetries + 1})...`);
 
-        const response = await fetch("/api/admin/stats", {
+        const response = await fetch(createApiUrl("/api/admin/stats"), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Cache-Control': 'no-cache',
@@ -293,7 +294,7 @@ export default function Admin() {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(createApiUrl(url), {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -329,7 +330,7 @@ export default function Admin() {
     // Fetch stats with enhanced error handling
     try {
       console.log("Fetching admin stats...");
-      const statsResponse = await adminFetch("/api/admin/stats", "stats");
+      const statsResponse = await adminFetch("admin/stats", "stats");
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
@@ -374,7 +375,7 @@ export default function Admin() {
     // Fetch users with enhanced error handling
     try {
       console.log("Fetching admin users...");
-      const usersResponse = await adminFetch("/api/admin/users?limit=10", "users");
+      const usersResponse = await adminFetch("admin/users?limit=10", "users");
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
@@ -419,7 +420,7 @@ export default function Admin() {
     // Fetch properties with enhanced error handling
     try {
       console.log("Fetching admin properties...");
-      const propertiesResponse = await adminFetch("/api/admin/properties?limit=10", "properties");
+      const propertiesResponse = await adminFetch("admin/properties?limit=10", "properties");
 
       if (propertiesResponse.ok) {
         const propertiesData = await propertiesResponse.json();
@@ -502,7 +503,7 @@ export default function Admin() {
 
     try {
       // First test basic connectivity
-      const testResponse = await fetch("/api/ping", {
+      const testResponse = await fetch(createApiUrl("/api/ping"), {
         headers: { 'Cache-Control': 'no-cache' },
         cache: "no-cache"
       });
