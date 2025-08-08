@@ -352,54 +352,62 @@ import {
 
 export function createServer() {
   const app = express();
-console.log("🟢 Installing CORS middleware...");
-
+// ---- CORS (strict allowlist, but OPTIONS pe always echo back) ----
 const RAW_ALLOWED_ORIGINS = [
   "https://ashishproperty.netlify.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
+const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase().replace(/\/$/, "")));
+const normalize = (o?: string | null) => (o || "").trim().toLowerCase().replace(/\/$/, "");
 
-const ALLOWED = new Set(RAW_ALLOWED_ORIGINS.map(o => o.trim().toLowerCase()));
-const normalize = (o?: string | null) =>
-  (o || "").trim().toLowerCase().replace(/\/$/, "");
+function applyCors(req: any, res: any) {
+  const origin = req.headers.origin as string | undefined;
+  const n = normalize(origin);
 
-const setCors = (req: any, res: any) => {
-  const origin = req.headers.origin || "";
-  const nOrigin = normalize(origin);
+  // Debug line (Railway logs me dikhega)
+  console.log("🔍 CORS", { method: req.method, path: req.path, origin, n });
 
-  // Debug:
-  console.log("🔍 CORS Check:", { origin, normalized: nOrigin, method: req.method, path: req.path });
+  // Preflight (OPTIONS): echo back whatever origin aaya so browser pass ho jaye
+  if (req.method === "OPTIONS") {
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+    }
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    );
+    res.setHeader("Access-Control-Max-Age", "86400");
+    return true; // handled
+  }
 
-  if (ALLOWED.has(nOrigin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin); // echo exact
+  // Non-OPTIONS requests: sirf allowlist origins ko allow karo
+  if (origin && ALLOWED.has(n)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
-};
+  return false;
+}
 
+// Global middleware
 app.use((req, res, next) => {
-  setCors(req, res);
-  if (req.method === "OPTIONS") return res.status(204).end();
+  const handled = applyCors(req, res);
+  if (handled) return res.status(204).end();
   next();
 });
 
-// Belt & suspenders: make sure ANY path preflight is answered
+// Safety net
 app.options("*", (req, res) => {
-  setCors(req, res);
+  applyCors(req, res);
   return res.status(204).end();
 });
-
-console.log("✅ CORS middleware installed");
 
 
 
