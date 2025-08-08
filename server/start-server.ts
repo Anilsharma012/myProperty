@@ -1,4 +1,5 @@
 // server/start-server.ts
+
 import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 import { ChatWebSocketServer } from "./websocket";
 import { connectToDatabase } from "./db/mongodb";
@@ -11,11 +12,12 @@ async function startServer() {
 
     const app = createServer();
 
-    // Railway always sets PORT env. Don't fallback to 8080 here.
-    const raw = process.env.PORT;
-    const PORT = raw ? Number(raw) : NaN;
+    // Railway automatically sets PORT. Do NOT hardcode or fallback to 8080.
+    const rawPort = process.env.PORT;
+    const PORT = rawPort ? Number(rawPort) : NaN;
+
     if (!PORT || Number.isNaN(PORT)) {
-      console.error("❌ PORT env missing. Railway needs the app to listen on PORT.");
+      console.error("❌ PORT environment variable is missing or invalid. Railway requires a valid PORT.");
       process.exit(1);
     }
 
@@ -24,10 +26,12 @@ async function startServer() {
       console.log("🚀 All services ready to accept requests");
     });
 
+    // Initialize extra services
     initializePushNotifications(server);
     initializePackageSync(server);
     new ChatWebSocketServer(server);
     console.log("💬 Chat WebSocket server initialized");
+
   } catch (err) {
     console.error("❌ Failed to start server:", err);
     console.log("🔄 Retrying in 5 seconds...");
