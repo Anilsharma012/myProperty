@@ -34,7 +34,7 @@ export default function ContentPage() {
     try {
       setLoading(true);
       const response = await fetch(createApiUrl(`/api/content/${slug}`));
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -45,11 +45,11 @@ export default function ContentPage() {
           } else {
             document.title = `${data.data.title} - Aashish Property`;
           }
-          
+
           if (data.data.metaDescription) {
             const metaDesc = document.querySelector('meta[name="description"]');
             if (metaDesc) {
-              metaDesc.setAttribute('content', data.data.metaDescription);
+              metaDesc.setAttribute("content", data.data.metaDescription);
             }
           }
         } else {
@@ -84,7 +84,9 @@ export default function ContentPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Page Not Found
+            </h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Button asChild variant="outline">
               <Link to="/">
@@ -123,7 +125,9 @@ export default function ContentPage() {
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>Updated {new Date(page.updatedAt).toLocaleDateString()}</span>
+                <span>
+                  Updated {new Date(page.updatedAt).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex items-center space-x-1">
                 <User className="h-4 w-4" />
@@ -133,7 +137,7 @@ export default function ContentPage() {
           </header>
 
           {/* Page Content */}
-          <div 
+          <div
             className="prose prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: page.content }}
           />
@@ -142,13 +146,18 @@ export default function ContentPage() {
           <footer className="mt-12 pt-8 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
               <div className="text-sm text-gray-600">
-                This page was last updated on {new Date(page.updatedAt).toLocaleDateString()}
+                This page was last updated on{" "}
+                {new Date(page.updatedAt).toLocaleDateString()}
               </div>
               <div className="flex space-x-4">
                 <Button asChild variant="outline" size="sm">
                   <Link to="/contact-us">Contact Support</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-[#C70000] hover:bg-[#A60000]">
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-[#C70000] hover:bg-[#A60000]"
+                >
                   <Link to="/">Browse Properties</Link>
                 </Button>
               </div>

@@ -1,18 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { createApiUrl } from '@/lib/api-utils';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Badge } from '../components/ui/badge';
-import { 
-  Users, 
-  Package, 
-  DollarSign, 
-  TrendingUp, 
-  Settings, 
-  Bell, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { createApiUrl } from "@/lib/api-utils";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
+import {
+  Users,
+  Package,
+  DollarSign,
+  TrendingUp,
+  Settings,
+  Bell,
   Home,
   Eye,
   MessageSquare,
@@ -23,9 +33,9 @@ import {
   Crown,
   Star,
   Shield,
-  Zap
-} from 'lucide-react';
-import EnhancedPackageManagement from '../components/admin/EnhancedPackageManagement';
+  Zap,
+} from "lucide-react";
+import EnhancedPackageManagement from "../components/admin/EnhancedPackageManagement";
 
 interface DashboardStats {
   totalUsers: number;
@@ -40,7 +50,11 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: string;
-  type: 'user_registered' | 'package_purchased' | 'property_posted' | 'property_approved';
+  type:
+    | "user_registered"
+    | "package_purchased"
+    | "property_posted"
+    | "property_approved";
   message: string;
   timestamp: Date;
   user?: {
@@ -60,48 +74,55 @@ const EnhancedAdminDashboard: React.FC = () => {
     activePackages: 0,
     pendingApprovals: 0,
     newUsers: 0,
-    packagePurchases: 0
+    packagePurchases: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user || user.userType !== 'admin') {
-      navigate('/admin-login');
+    if (!user || user.userType !== "admin") {
+      navigate("/admin-login");
       return;
     }
-    
+
     fetchDashboardData();
   }, [user, navigate]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch dashboard statistics
-      const [usersRes, propertiesRes, packagesRes, userPackagesRes] = await Promise.all([
-        fetch(createApiUrl('/api/admin/users?limit=1000'), {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(createApiUrl('/api/admin/properties'), {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(createApiUrl('/api/admin/packages'), {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(createApiUrl('/api/admin/user-packages'), {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
 
-      if (usersRes.ok && propertiesRes.ok && packagesRes.ok && userPackagesRes.ok) {
-        const [usersData, propertiesData, packagesData, userPackagesData] = await Promise.all([
-          usersRes.json(),
-          propertiesRes.json(),
-          packagesRes.json(),
-          userPackagesRes.json()
+      // Fetch dashboard statistics
+      const [usersRes, propertiesRes, packagesRes, userPackagesRes] =
+        await Promise.all([
+          fetch(createApiUrl("/api/admin/users?limit=1000"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(createApiUrl("/api/admin/properties"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(createApiUrl("/api/admin/packages"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(createApiUrl("/api/admin/user-packages"), {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
+
+      if (
+        usersRes.ok &&
+        propertiesRes.ok &&
+        packagesRes.ok &&
+        userPackagesRes.ok
+      ) {
+        const [usersData, propertiesData, packagesData, userPackagesData] =
+          await Promise.all([
+            usersRes.json(),
+            propertiesRes.json(),
+            packagesRes.json(),
+            userPackagesRes.json(),
+          ]);
 
         const users = usersData.data?.users || [];
         const properties = propertiesData.data || [];
@@ -111,23 +132,24 @@ const EnhancedAdminDashboard: React.FC = () => {
         // Calculate stats
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        
-        const newUsers = users.filter((u: any) => 
-          new Date(u.createdAt) > oneWeekAgo
+
+        const newUsers = users.filter(
+          (u: any) => new Date(u.createdAt) > oneWeekAgo,
         ).length;
 
-        const pendingApprovals = properties.filter((p: any) => 
-          p.approvalStatus === 'pending'
+        const pendingApprovals = properties.filter(
+          (p: any) => p.approvalStatus === "pending",
         ).length;
 
         const activePackages = packages.filter((p: any) => p.active).length;
 
-        const totalRevenue = userPackages.reduce((sum: number, up: any) => 
-          sum + (up.totalAmount || 0), 0
+        const totalRevenue = userPackages.reduce(
+          (sum: number, up: any) => sum + (up.totalAmount || 0),
+          0,
         );
 
-        const recentPackagePurchases = userPackages.filter((up: any) =>
-          new Date(up.purchaseDate) > oneWeekAgo
+        const recentPackagePurchases = userPackages.filter(
+          (up: any) => new Date(up.purchaseDate) > oneWeekAgo,
         ).length;
 
         setStats({
@@ -138,63 +160,66 @@ const EnhancedAdminDashboard: React.FC = () => {
           activePackages,
           pendingApprovals,
           newUsers,
-          packagePurchases: recentPackagePurchases
+          packagePurchases: recentPackagePurchases,
         });
 
         // Generate recent activity
         const activity: RecentActivity[] = [
           ...userPackages.slice(0, 3).map((up: any) => ({
             id: up._id,
-            type: 'package_purchased' as const,
-            message: `${up.user?.name || 'User'} purchased ${up.package?.name || 'package'}`,
+            type: "package_purchased" as const,
+            message: `${up.user?.name || "User"} purchased ${up.package?.name || "package"}`,
             timestamp: new Date(up.purchaseDate),
-            user: up.user
+            user: up.user,
           })),
           ...users.slice(0, 2).map((u: any) => ({
             id: u._id,
-            type: 'user_registered' as const,
+            type: "user_registered" as const,
             message: `${u.name} registered as ${u.userType}`,
             timestamp: new Date(u.createdAt),
-            user: u
-          }))
-        ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            user: u,
+          })),
+        ].sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
 
         setRecentActivity(activity);
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data');
+      console.error("Error fetching dashboard data:", error);
+      setError("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-IN', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(date).toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'user_registered':
+      case "user_registered":
         return <Users className="h-4 w-4 text-blue-500" />;
-      case 'package_purchased':
+      case "package_purchased":
         return <Package className="h-4 w-4 text-green-500" />;
-      case 'property_posted':
+      case "property_posted":
         return <Home className="h-4 w-4 text-purple-500" />;
-      case 'property_approved':
+      case "property_approved":
         return <Shield className="h-4 w-4 text-orange-500" />;
       default:
         return <Activity className="h-4 w-4 text-gray-500" />;
@@ -219,10 +244,12 @@ const EnhancedAdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Admin Dashboard
+              </h1>
               <Badge variant="secondary">Administrator</Badge>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={fetchDashboardData}>
                 <RefreshCw className="h-4 w-4" />
@@ -263,11 +290,17 @@ const EnhancedAdminDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name}!</h2>
-                    <p className="text-gray-600">Here's what's happening with your platform today.</p>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Welcome back, {user?.name}!
+                    </h2>
+                    <p className="text-gray-600">
+                      Here's what's happening with your platform today.
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">{new Date().toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date().toLocaleDateString()}
+                    </p>
                     <p className="text-xs text-gray-400">Admin Dashboard</p>
                   </div>
                 </div>
@@ -278,7 +311,9 @@ const EnhancedAdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Users
+                  </CardTitle>
                   <Users className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
@@ -291,11 +326,15 @@ const EnhancedAdminDashboard: React.FC = () => {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Properties
+                  </CardTitle>
                   <Home className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalProperties}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalProperties}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {stats.pendingApprovals} pending approval
                   </p>
@@ -304,11 +343,15 @@ const EnhancedAdminDashboard: React.FC = () => {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Active Packages</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Active Packages
+                  </CardTitle>
                   <Package className="h-4 w-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.activePackages}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.activePackages}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     of {stats.totalPackages} total
                   </p>
@@ -317,11 +360,15 @@ const EnhancedAdminDashboard: React.FC = () => {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Revenue
+                  </CardTitle>
                   <DollarSign className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(stats.totalRevenue)}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {stats.packagePurchases} purchases this week
                   </p>
@@ -365,7 +412,10 @@ const EnhancedAdminDashboard: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {recentActivity.slice(0, 5).map((activity) => (
-                      <div key={activity.id} className="flex items-center space-x-3">
+                      <div
+                        key={activity.id}
+                        className="flex items-center space-x-3"
+                      >
                         {getActivityIcon(activity.type)}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
@@ -378,7 +428,9 @@ const EnhancedAdminDashboard: React.FC = () => {
                       </div>
                     ))}
                     {recentActivity.length === 0 && (
-                      <p className="text-gray-500 text-center py-4">No recent activity</p>
+                      <p className="text-gray-500 text-center py-4">
+                        No recent activity
+                      </p>
                     )}
                   </div>
                 </CardContent>
@@ -395,37 +447,49 @@ const EnhancedAdminDashboard: React.FC = () => {
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-sm">Database</span>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700"
+                      >
                         Healthy
                       </Badge>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-sm">API Services</span>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700"
+                      >
                         Online
                       </Badge>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-sm">Real-time Updates</span>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700"
+                      >
                         Active
                       </Badge>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-sm">Payment Gateway</span>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700"
+                      >
                         Connected
                       </Badge>
                     </div>
@@ -449,11 +513,13 @@ const EnhancedAdminDashboard: React.FC = () => {
               <CardContent>
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">User Management</h3>
-                  <p className="text-gray-500 mb-4">Manage users, view analytics, and control access.</p>
-                  <Button variant="outline">
-                    View All Users
-                  </Button>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    User Management
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Manage users, view analytics, and control access.
+                  </p>
+                  <Button variant="outline">View All Users</Button>
                 </div>
               </CardContent>
             </Card>
@@ -468,11 +534,13 @@ const EnhancedAdminDashboard: React.FC = () => {
               <CardContent>
                 <div className="text-center py-12">
                   <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Dashboard</h3>
-                  <p className="text-gray-500 mb-4">View detailed analytics and generate reports.</p>
-                  <Button variant="outline">
-                    View Analytics
-                  </Button>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Analytics Dashboard
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    View detailed analytics and generate reports.
+                  </p>
+                  <Button variant="outline">View Analytics</Button>
                 </div>
               </CardContent>
             </Card>

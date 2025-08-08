@@ -7,6 +7,7 @@ This guide explains how to deploy your application to platforms like Railway, Ve
 ### For Railway Deployment
 
 1. **Set Environment Variable in Railway:**
+
    ```
    VITE_BASE_URL=https://yourapp.railway.app
    ```
@@ -29,6 +30,7 @@ This guide explains how to deploy your application to platforms like Railway, Ve
 ### For Other Hosting Platforms
 
 Replace with your actual deployed URL:
+
 ```
 VITE_BASE_URL=https://your-domain.com
 ```
@@ -46,6 +48,7 @@ The application now automatically detects the environment and uses the appropria
 The following pages have been updated to use `VITE_BASE_URL`:
 
 ### Core Pages:
+
 - ✅ `PostProperty.tsx` - Property posting with image uploads
 - ✅ `Properties.tsx` - Property listings
 - ✅ `PropertyDetail.tsx` - Individual property views
@@ -53,6 +56,7 @@ The following pages have been updated to use `VITE_BASE_URL`:
 - ✅ `CategoryProperties.tsx` - Category-specific properties
 
 ### Authentication Pages:
+
 - ✅ `Login.tsx` - User login/registration
 - ✅ `SimpleLogin.tsx` - Simplified login
 - ✅ `UserLogin.tsx` - User-specific login
@@ -60,6 +64,7 @@ The following pages have been updated to use `VITE_BASE_URL`:
 - ✅ `ComprehensiveAuth.tsx` - Complete auth flow
 
 ### Admin & Dashboards:
+
 - ✅ `Admin.tsx` - Admin dashboard
 - ✅ `EnhancedAdminDashboard.tsx` - Enhanced admin features
 - ✅ `BuyerDashboard.tsx` - Buyer dashboard
@@ -67,13 +72,16 @@ The following pages have been updated to use `VITE_BASE_URL`:
 - ✅ `AgentDashboard.tsx` - Uses centralized API client ✨
 
 ### Communication:
+
 - ✅ `Chat.tsx` - Real-time messaging
 
 ### Content Pages:
+
 - ✅ `DynamicPage.tsx` - Dynamic content pages
 - ✅ `ContentPage.tsx` - Static content pages
 
 ### Testing & Utilities:
+
 - ✅ `FooterTest.tsx` - Footer API testing
 
 ## API Utility Functions
@@ -81,38 +89,38 @@ The following pages have been updated to use `VITE_BASE_URL`:
 ### New Utility: `createApiUrl()`
 
 ```typescript
-import { createApiUrl } from '@/lib/api-utils';
+import { createApiUrl } from "@/lib/api-utils";
 
 // Old way (localhost only):
-fetch('/api/properties')
+fetch("/api/properties");
 
 // New way (works everywhere):
-fetch(createApiUrl('/api/properties'))
+fetch(createApiUrl("/api/properties"));
 ```
 
 ### Available Utilities:
 
 ```typescript
-import { 
-  createApiUrl, 
-  apiFetch, 
-  apiGet, 
-  apiPost, 
-  apiPut, 
-  apiDelete 
-} from '@/lib/api-utils';
+import {
+  createApiUrl,
+  apiFetch,
+  apiGet,
+  apiPost,
+  apiPut,
+  apiDelete,
+} from "@/lib/api-utils";
 
 // Create URL
-const url = createApiUrl('/api/properties');
+const url = createApiUrl("/api/properties");
 
 // Direct fetch with auto URL handling
-const response = await apiFetch('/api/properties');
+const response = await apiFetch("/api/properties");
 
 // HTTP method shortcuts
-const data = await apiGet('/api/properties');
-await apiPost('/api/properties', propertyData);
-await apiPut('/api/properties/123', updateData);
-await apiDelete('/api/properties/123');
+const data = await apiGet("/api/properties");
+await apiPost("/api/properties", propertyData);
+await apiPut("/api/properties/123", updateData);
+await apiDelete("/api/properties/123");
 ```
 
 ## Deployment Steps
@@ -122,11 +130,13 @@ await apiDelete('/api/properties/123');
 1. **Push your code to GitHub**
 
 2. **Connect to Railway:**
+
    - Go to [Railway](https://railway.app)
    - Connect your GitHub repository
    - Deploy the project
 
 3. **Set Environment Variables:**
+
    ```
    VITE_BASE_URL=https://yourapp.railway.app
    MONGODB_URI=your_mongodb_connection_string
@@ -140,6 +150,7 @@ await apiDelete('/api/properties/123');
 ### Manual Verification:
 
 After deployment, verify that:
+
 - ✅ All API calls use the correct base URL
 - ✅ Authentication works properly
 - ✅ Property uploads and retrievals work
@@ -151,10 +162,12 @@ After deployment, verify that:
 ### Common Issues:
 
 1. **CORS Errors:**
+
    - Ensure your backend allows requests from your deployed domain
    - Check server CORS configuration
 
 2. **API Calls Failing:**
+
    - Verify `VITE_BASE_URL` is set correctly
    - Check browser network tab for actual URLs being called
    - Ensure trailing slashes match between frontend and backend
@@ -168,17 +181,18 @@ After deployment, verify that:
 
 ```javascript
 // Check current API configuration
-console.log('VITE_BASE_URL:', import.meta.env.VITE_BASE_URL);
-console.log('Current URL:', window.location.href);
+console.log("VITE_BASE_URL:", import.meta.env.VITE_BASE_URL);
+console.log("Current URL:", window.location.href);
 
 // Test API URL generation
-import { createApiUrl } from '@/lib/api-utils';
-console.log('Generated API URL:', createApiUrl('/api/properties'));
+import { createApiUrl } from "@/lib/api-utils";
+console.log("Generated API URL:", createApiUrl("/api/properties"));
 ```
 
 ## Backward Compatibility
 
 The application maintains backward compatibility:
+
 - ✅ Works without `VITE_BASE_URL` set (auto-detects environment)
 - ✅ Supports legacy `VITE_API_BASE_URL` variable
 - ✅ Falls back to relative URLs for development
@@ -186,6 +200,7 @@ The application maintains backward compatibility:
 ## Next Steps
 
 After deployment:
+
 1. Test all major features on the live site
 2. Monitor server logs for any API errors
 3. Set up monitoring for API performance

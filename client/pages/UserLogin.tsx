@@ -4,7 +4,12 @@ import { useAuth } from "../hooks/useAuth";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Eye, EyeOff, Mail, Phone, Lock } from "lucide-react";
 import OLXStyleHeader from "../components/OLXStyleHeader";
@@ -17,7 +22,7 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,7 +36,7 @@ const UserLogin = () => {
     const testServerConnection = async () => {
       try {
         console.log("🔍 Testing server connectivity...");
-        const response = await fetch(createApiUrl('/api/ping'));
+        const response = await fetch(createApiUrl("/api/ping"));
         const data = await response.json();
         console.log("✅ Server ping successful:", data);
       } catch (error) {
@@ -42,7 +47,9 @@ const UserLogin = () => {
     testServerConnection();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -57,8 +64,8 @@ const UserLogin = () => {
 
     try {
       const endpoint = isLogin ? "auth/login" : "auth/register";
-      const payload = isLogin 
-        ? { 
+      const payload = isLogin
+        ? {
             email: formData.email || undefined,
             phone: formData.phone || undefined,
             password: formData.password,
@@ -72,7 +79,7 @@ const UserLogin = () => {
       if (response.data.success) {
         const { token, user } = response.data.data;
         login(token, user);
-        
+
         // Redirect to user dashboard
         navigate("/user-dashboard");
       } else {
@@ -83,7 +90,7 @@ const UserLogin = () => {
       console.error("Error details:", {
         message: error.message,
         endpoint,
-        payload
+        payload,
       });
       setError(error.message || "Network error occurred");
     } finally {
@@ -94,7 +101,7 @@ const UserLogin = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <OLXStyleHeader />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           <Card>
@@ -103,13 +110,12 @@ const UserLogin = () => {
                 {isLogin ? "Welcome Back!" : "Create Account"}
               </CardTitle>
               <p className="text-center text-gray-600">
-                {isLogin 
-                  ? "Sign in to your account" 
-                  : "Join our property marketplace"
-                }
+                {isLogin
+                  ? "Sign in to your account"
+                  : "Join our property marketplace"}
               </p>
             </CardHeader>
-            
+
             <CardContent>
               {error && (
                 <Alert className="mb-4 border-red-200 bg-red-50">
@@ -221,18 +227,24 @@ const UserLogin = () => {
                   </div>
                 )}
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-[#C70000] hover:bg-[#A50000] text-white"
                   disabled={loading}
                 >
-                  {loading ? "Please wait..." : (isLogin ? "Sign In" : "Create Account")}
+                  {loading
+                    ? "Please wait..."
+                    : isLogin
+                      ? "Sign In"
+                      : "Create Account"}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
                 <span className="text-gray-600">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  {isLogin
+                    ? "Don't have an account? "
+                    : "Already have an account? "}
                 </span>
                 <button
                   onClick={() => setIsLogin(!isLogin)}
@@ -243,8 +255,8 @@ const UserLogin = () => {
               </div>
 
               <div className="mt-4 text-center">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className="text-gray-500 hover:text-gray-700 text-sm"
                 >
                   ← Back to Home

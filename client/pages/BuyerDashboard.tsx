@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
-import { Property } from '@shared/types';
-import { api } from '../lib/api';
-import { createApiUrl } from '@/lib/api-utils';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { 
-  Search, 
-  Heart, 
-  MessageSquare, 
-  Eye, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate, Link } from "react-router-dom";
+import { Property } from "@shared/types";
+import { api } from "../lib/api";
+import { createApiUrl } from "@/lib/api-utils";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import {
+  Search,
+  Heart,
+  MessageSquare,
+  Eye,
   Filter,
   User,
   Settings,
@@ -24,10 +29,10 @@ import {
   RefreshCw,
   Home,
   Star,
-  TrendingUp
-} from 'lucide-react';
-import OLXStyleHeader from '../components/OLXStyleHeader';
-import BottomNavigation from '../components/BottomNavigation';
+  TrendingUp,
+} from "lucide-react";
+import OLXStyleHeader from "../components/OLXStyleHeader";
+import BottomNavigation from "../components/BottomNavigation";
 
 export default function BuyerDashboard() {
   const { user, logout } = useAuth();
@@ -36,8 +41,8 @@ export default function BuyerDashboard() {
   const [favorites, setFavorites] = useState<Property[]>([]);
   const [recentViews, setRecentViews] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState({
     totalFavorites: 0,
     recentViews: 0,
@@ -47,38 +52,40 @@ export default function BuyerDashboard() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/simple-login');
+      navigate("/simple-login");
       return;
     }
-    
-    if (user.userType !== 'buyer') {
+
+    if (user.userType !== "buyer") {
       // Redirect to appropriate dashboard
       switch (user.userType) {
-        case 'seller':
-          navigate('/seller-dashboard');
+        case "seller":
+          navigate("/seller-dashboard");
           break;
-        case 'agent':
-          navigate('/agent-dashboard');
+        case "agent":
+          navigate("/agent-dashboard");
           break;
         default:
-          navigate('/user-dashboard');
+          navigate("/user-dashboard");
       }
       return;
     }
-    
+
     fetchDashboardData();
   }, [user, navigate]);
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        navigate('/simple-login');
+        navigate("/simple-login");
         return;
       }
 
       // Fetch featured properties for buyers
-      const propertiesResponse = await fetch(createApiUrl('/api/properties/featured'));
+      const propertiesResponse = await fetch(
+        createApiUrl("/api/properties/featured"),
+      );
       if (propertiesResponse.ok) {
         const propertiesData = await propertiesResponse.json();
         if (propertiesData.success) {
@@ -94,10 +101,9 @@ export default function BuyerDashboard() {
         savedSearches: 2,
         inquiries: 3,
       });
-
     } catch (error: any) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data. Please try again.');
+      console.error("Error fetching dashboard data:", error);
+      setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +111,7 @@ export default function BuyerDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   const handleSearch = () => {
@@ -132,28 +138,24 @@ export default function BuyerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <OLXStyleHeader />
-      
+
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Buyer Dashboard</h1>
-            <p className="text-gray-600">Find your perfect property, {user?.name}!</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Buyer Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Find your perfect property, {user?.name}!
+            </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              onClick={fetchDashboardData}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={fetchDashboardData} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={handleLogout} variant="outline" size="sm">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
@@ -177,10 +179,13 @@ export default function BuyerDashboard() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                 />
               </div>
-              <Button onClick={handleSearch} className="bg-[#C70000] hover:bg-[#A60000]">
+              <Button
+                onClick={handleSearch}
+                className="bg-[#C70000] hover:bg-[#A60000]"
+              >
                 <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
@@ -200,37 +205,51 @@ export default function BuyerDashboard() {
               <Heart className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.totalFavorites}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.totalFavorites}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recent Views</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Recent Views
+              </CardTitle>
               <Eye className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.recentViews}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.recentViews}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saved Searches</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Saved Searches
+              </CardTitle>
               <Search className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.savedSearches}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.savedSearches}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inquiries Sent</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Inquiries Sent
+              </CardTitle>
               <MessageSquare className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.inquiries}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.inquiries}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -292,8 +311,12 @@ export default function BuyerDashboard() {
                 </div>
               )}
               <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-green-100 text-green-800">
-                  {user?.userType?.charAt(0).toUpperCase() + user?.userType?.slice(1)}
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 text-green-800"
+                >
+                  {user?.userType?.charAt(0).toUpperCase() +
+                    user?.userType?.slice(1)}
                 </Badge>
               </div>
             </div>
@@ -314,7 +337,9 @@ export default function BuyerDashboard() {
             {properties.length === 0 ? (
               <div className="text-center py-8">
                 <Home className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-500 mb-4">No featured properties available right now</p>
+                <p className="text-gray-500 mb-4">
+                  No featured properties available right now
+                </p>
                 <Link to="/search">
                   <Button className="bg-[#C70000] hover:bg-[#A60000] text-white">
                     <Search className="h-4 w-4 mr-2" />
@@ -325,9 +350,14 @@ export default function BuyerDashboard() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {properties.map((property) => (
-                  <div key={property._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div
+                    key={property._id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-gray-900 text-sm">{property.title}</h3>
+                      <h3 className="font-medium text-gray-900 text-sm">
+                        {property.title}
+                      </h3>
                       <Button size="sm" variant="ghost" className="p-1">
                         <Heart className="h-4 w-4 text-gray-400 hover:text-red-500" />
                       </Button>
@@ -370,7 +400,9 @@ export default function BuyerDashboard() {
           <CardContent>
             <div className="text-center py-8">
               <TrendingUp className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-500 mb-4">Set your preferences to get personalized recommendations</p>
+              <p className="text-gray-500 mb-4">
+                Set your preferences to get personalized recommendations
+              </p>
               <Button variant="outline">
                 <Settings className="h-4 w-4 mr-2" />
                 Set Preferences
@@ -379,7 +411,7 @@ export default function BuyerDashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       <BottomNavigation />
     </div>
   );
