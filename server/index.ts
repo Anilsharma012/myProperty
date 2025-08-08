@@ -485,6 +485,11 @@ export function createServer() {
           method: req.method,
           url: req.url,
         },
+        cors: {
+          allowedOrigins: allowedOrigins,
+          currentOrigin: req.get("origin"),
+          isOriginAllowed: req.get("origin") ? allowedOrigins.includes(req.get("origin")) : true,
+        },
         timestamp: new Date().toISOString(),
       };
 
