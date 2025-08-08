@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import ChatBot from "../components/ChatBot";
+import { createApiUrl } from "@/lib/api-utils";
 
 interface Property {
   _id: string;
@@ -85,7 +86,7 @@ export default function PropertyDetail() {
   const fetchProperty = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/properties/${id}`);
+      const response = await fetch(createApiUrl(`/api/properties/${id}`));
       
       if (response.ok) {
         const data = await response.json();
@@ -107,7 +108,7 @@ export default function PropertyDetail() {
 
   const trackView = async () => {
     try {
-      await fetch(`/api/analytics/view/${id}`, {
+      await fetch(createApiUrl(`/api/analytics/view/${id}`), {
         method: "POST",
       });
     } catch (error) {
@@ -117,7 +118,7 @@ export default function PropertyDetail() {
 
   const handleCall = (phoneNumber: string) => {
     // Track phone click
-    fetch(`/api/analytics/phone/${id}`, { method: "POST" }).catch(console.error);
+    fetch(createApiUrl(`/api/analytics/phone/${id}`), { method: "POST" }).catch(console.error);
     window.open(`tel:${phoneNumber}`, '_self');
   };
 
