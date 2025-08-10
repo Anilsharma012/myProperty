@@ -1,5 +1,3 @@
-
-
 import express, { Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 
@@ -10,7 +8,10 @@ import { ensureDatabase, databaseHealthCheck } from "./middleware/database";
 import { ChatWebSocketServer } from "./websocket";
 import { pushNotificationService } from "./services/pushNotificationService";
 import { packageSyncService } from "./services/packageSyncService";
-import { getWebSocketStatus, testWebSocketConnection } from "./routes/websocket-debug";
+import {
+  getWebSocketStatus,
+  testWebSocketConnection,
+} from "./routes/websocket-debug";
 
 // Property routes
 import {
@@ -70,7 +71,6 @@ import {
   updatePropertyApproval,
   createTestProperty,
   debugProperties,
-  sendNotification,
   getAdminPackages,
   getAdminUserPackages,
 } from "./routes/admin";
@@ -215,7 +215,6 @@ import {
   trackPageView,
 } from "./routes/content";
 
-
 import {
   testDatabase,
   testAdminUser,
@@ -343,79 +342,60 @@ import {
   testUserConnection,
 } from "./routes/test-push-notifications";
 
-
-
-
-// --- CORS middleware (manual, credentials-safe) ---
-const ALLOWED_ORIGINS = new Set<string>([
-  "https://ashishproperty.netlify.app",
-  // Add more if needed:
-  // "https://your-custom-domain.com",
-  // Dev:
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-]);
-
-function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-  const origin = (req.headers.origin || "").replace(/\/$/, "");
-  if (ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Accept, X-Requested-With"
-  );
-
-  if (req.method === "OPTIONS") {
-    // Preflight must return quickly with 204 and CORS headers
-    return res.status(204).end();
-  }
-  next();
-}
-
 export function createServer() {
   const app = express();
-
-
-
 
   app.set("trust proxy", 1);
 
   app.use(cookieParser());
   app.use(express.json({ limit: "10mb" }));
 
-
-    app.use((req, _res, next) => {
-    console.log(`➡️  ${req.method} ${req.url} origin=${req.headers.origin || "-"}`);
+  app.use((req, _res, next) => {
+    console.log(
+      `➡️  ${req.method} ${req.url} origin=${req.headers.origin || "-"}`,
+    );
     next();
   });
+
+  const ALLOWED_ORIGINS = new Set<string>([
+    "https://ashishproperty.netlify.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
+
+  function corsMiddleware(req: Request, res: Response, next: NextFunction) {
+    const origin = (req.headers.origin || "").replace(/\/$/, "");
+    if (ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Accept, X-Requested-With",
+    );
+    if (req.method === "OPTIONS") return res.status(204).end();
+    next();
+  }
+
   app.use(corsMiddleware);
   app.options("*", corsMiddleware);
 
-  // Initialize MongoDB connection
-  connectToDatabase()
-    .then(() => {
-      console.log("✅ MongoDB Atlas connected successfully");
-    })
-    .catch((error) => {
-      console.error("�� MongoDB connection failed:", error);
-      console.log("Server will continue with limited functionality");
-    });
-
-    app.get("/", (_req, res) => res.status(200).send("OK"));
-app.get("/favicon.ico", (_req, res) => res.status(204).end());
+  app.get("/", (_req, res) => res.status(200).send("OK"));
+  app.get("/favicon.ico", (_req, res) => res.status(204).end());
 
   // Health check with database status
   app.get("/api/ping", async (req, res) => {
     const startTime = Date.now();
-      const allowedOrigins = [
-    "https://ashishproperty.netlify.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-  ];
+    const allowedOrigins = [
+      "https://ashishproperty.netlify.app",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ];
 
     try {
       // Try to get database connection
@@ -1438,8 +1418,6 @@ app.get("/favicon.ico", (_req, res) => res.status(204).end());
     getAdminUserPackages,
   );
 
-
- 
   app.get("/api/debug/websocket-status", getWebSocketStatus);
   app.post("/api/debug/websocket-test", testWebSocketConnection);
 
@@ -1462,7 +1440,7 @@ app.get("/favicon.ico", (_req, res) => res.status(204).end());
       database: {
         connected: dbStatus.connected,
         responsive: dbStatus.responsive,
-        error: dbStatus.error,
+        // error: dbStatus.error,
       },
     });
   });
@@ -1481,6 +1459,3 @@ export function initializePackageSync(server: any) {
   packageSyncService.initialize(server);
   console.log("📦 Package sync service initialized");
 }
-
-
-
