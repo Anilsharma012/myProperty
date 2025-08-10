@@ -31,7 +31,7 @@ export default function AdminLogin() {
         loginData.email = email;
       } else {
         loginData.phone = phone;
-      }
+      } 
 
     const response = await fetch(createApiUrl("auth/login"), {
         method: "POST",
