@@ -4,39 +4,41 @@ import path from "path";
 
 export default defineConfig({
   build: {
+    ssr: true,
+    outDir: "dist/server",
+    target: "node18",                 // ← Railway logs: Node v18.20.5
     lib: {
-      // ✅ server ko yahin se start karna hai (index.ts sirf createServer return kare)
       entry: path.resolve(__dirname, "server/start-server.ts"),
       name: "server",
-      fileName: () => "start-server", // output name without extension
-      formats: ["es"],
+      fileName: () => "start-server",
+      formats: ["es"],                // ESM output
     },
-    outDir: "dist/server",
-    target: "node22",
-    ssr: true,
     rollupOptions: {
+      // Jo packages runtime pe Node se load honge, bundle se bahar rakhe
       external: [
         // Node built-ins
-        "fs", "path", "url", "http", "https", "os", "crypto",
-        "stream", "util", "events", "buffer", "querystring", "child_process",
-        // External deps (keep out of bundle)
-        "express", "cors",
+        "fs","path","url","http","https","os","crypto","stream",
+        "util","events","buffer","querystring","child_process",
+        // Common externals
+        "express","cors","mongoose","ws","cookie-parser","jsonwebtoken",
       ],
       output: {
         format: "es",
-        entryFileNames: "start-server.mjs", // ✅ final file name
+        entryFileNames: "start-server.mjs", // ← final file name we will run
       },
     },
-    minify: false,     // debugging friendly
+    minify: false,
     sourcemap: true,
-    // emptyOutDir: false, // (optional) agar dist/ share ho raha ho
+    emptyOutDir: false,               // monorepo/shared dist ko wipe na kare
   },
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./client"),
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
+
   define: {
     "process.env.NODE_ENV": '"production"',
   },
