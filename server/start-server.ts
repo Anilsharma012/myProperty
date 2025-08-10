@@ -17,9 +17,8 @@ async function connectDbWithTimeout(ms: number) {
   return Promise.race([
     (async () => {
       console.log("🔄 DB: connecting…");
-      const conn = await connectToDatabase();
+      await connectToDatabase();
       console.log("✅ DB: connected");
-      return conn;
     })(),
     new Promise((_, rej) =>
       setTimeout(() => rej(new Error(`DB connect timed out after ${ms}ms`)), ms)
@@ -28,43 +27,35 @@ async function connectDbWithTimeout(ms: number) {
 }
 
 async function start() {
-  // global safety nets
-  process.on("unhandledRejection", (err) => {
-    console.error("🔥 UnhandledRejection:", err);
-  });
-  process.on("uncaughtException", (err) => {
-    console.error("🔥 UncaughtException:", err);
-  });
+  console.log("🚀 Boot v3: starting");
 
-  console.log("🚀 Boot: starting server process");
   const app = createServer();
 
-  // 1) LISTEN IMMEDIATELY (very important for Railway)
+  // 🟢 LISTEN IMMEDIATELY (Railway Edge ko yahi chahiye)
   const PORT = getPort();
   const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ HTTP server listening on PORT=${PORT}`);
+    console.log(`✅ HTTP listening PORT=${PORT}`);
   });
 
-  // 2) INIT services that depend on server socket
+  // services
   try {
     initializePushNotifications(server);
     initializePackageSync(server);
     new ChatWebSocketServer(server);
-    console.log("💬 Chat/WebSocket & services initialized");
+    console.log("💬 WebSocket/services ready");
   } catch (e) {
     console.error("⚠️ Service init error:", e);
   }
 
-  // 3) CONNECT DB IN BACKGROUND (don’t block listen)
+  // DB background
   try {
     await connectDbWithTimeout(10_000);
-  } catch (e) {
-    console.error("⚠️ DB connect issue:", (e as Error).message);
-    // app will still serve / and other non-DB endpoints
+  } catch (e: any) {
+    console.error("⚠️ DB connect issue:", e?.message || e);
   }
 }
 
 start().catch((e) => {
-  console.error("❌ Fatal startup error:", e);
+  console.error("❌ Fatal:", e);
   process.exit(1);
 });
