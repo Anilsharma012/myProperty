@@ -385,8 +385,15 @@ export function createServer() {
   app.set("trust proxy", 1);
 
   app.use(cookieParser());
-  app.use(express.json({ limit: "2mb" }));
+  app.use(express.json({ limit: "10mb" }));
+
+
+    app.use((req, _res, next) => {
+    console.log(`➡️  ${req.method} ${req.url} origin=${req.headers.origin || "-"}`);
+    next();
+  });
   app.use(corsMiddleware);
+  app.options("*", corsMiddleware);
 
   // Initialize MongoDB connection
   connectToDatabase()
