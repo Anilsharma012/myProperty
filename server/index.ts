@@ -1,6 +1,9 @@
-import express from "express";
-import cors from "cors";
 
+
+import express, { Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
+
+// import cors from "cors";
 import { connectToDatabase, getDatabase } from "./db/mongodb";
 import { authenticateToken, requireAdmin } from "./middleware/auth";
 import { ensureDatabase, databaseHealthCheck } from "./middleware/database";
@@ -212,17 +215,7 @@ import {
   trackPageView,
 } from "./routes/content";
 
-// Homepage slider routes
-// import {
-//   getHomepageSliders,
-//   getAdminHomepageSliders,
-//   createHomepageSlider,
-//   updateHomepageSlider,
-//   deleteHomepageSlider,
-//   initializeHomepageSliders,
-// } from "./routes/homepage-sliders";
 
-// Database test routes
 import {
   testDatabase,
   testAdminUser,
@@ -350,61 +343,50 @@ import {
   testUserConnection,
 } from "./routes/test-push-notifications";
 
-export function createServer() {
-  const app = express();
-// ---- CORS (debug-safe) ----
-const RAW_ALLOWED_ORIGINS = [
+
+
+
+// --- CORS middleware (manual, credentials-safe) ---
+const ALLOWED_ORIGINS = new Set<string>([
   "https://ashishproperty.netlify.app",
+  // Add more if needed:
+  // "https://your-custom-domain.com",
+  // Dev:
   "http://localhost:5173",
-  "http://localhost:3000",
-];
-const normalize = (o?: string | null) =>
-  (o || "").trim().toLowerCase().replace(/\/$/, "");
+  "http://127.0.0.1:5173",
+]);
 
-function applyCors(req: any, res: any) {
-  const origin = req.headers.origin as string | undefined;
-  const n = normalize(origin);
-
-  // Debug line: Railway logs me dikhni chahiye
-  console.log("🔍 CORS", { method: req.method, path: req.path, origin, n });
-
-  // HAMESHA headers set karo (preflight + actual)
-  if (origin) {
-    res.setHeader("Access-Control-Allow-Origin", origin); // echo exact
+function corsMiddleware(req: Request, res: Response, next: NextFunction) {
+  const origin = (req.headers.origin || "").replace(/\/$/, "");
+  if (ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
-  } else {
-    res.setHeader("Access-Control-Allow-Origin", "*");   // no origin case
+    res.setHeader("Access-Control-Allow-Credentials", "true");
   }
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    "Content-Type, Authorization, Accept, X-Requested-With"
   );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
 
-  if (req.method === "OPTIONS") return true; // handled
-  return false;
+  if (req.method === "OPTIONS") {
+    // Preflight must return quickly with 204 and CORS headers
+    return res.status(204).end();
+  }
+  next();
 }
 
-app.use((req, res, next) => {
-  const handled = applyCors(req, res);
-  if (handled) return res.status(204).end();
-  next();
-});
-
-app.options("*", (req, res) => {
-  applyCors(req, res);
-  return res.status(204).end();
-});
+export function createServer() {
+  const app = express();
 
 
 
-  app.use(express.json({ limit: "1gb" }));
-  app.use(express.urlencoded({ extended: true, limit: "1gb" }));
+
+  app.set("trust proxy", 1);
+
+  app.use(cookieParser());
+  app.use(express.json({ limit: "2mb" }));
+  app.use(corsMiddleware);
 
   // Initialize MongoDB connection
   connectToDatabase()

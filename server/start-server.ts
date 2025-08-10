@@ -1,5 +1,3 @@
-// server/start-server.ts
-
 import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 import { ChatWebSocketServer } from "./websocket";
 import { connectToDatabase } from "./db/mongodb";
@@ -22,9 +20,9 @@ async function startServer() {
     const app = createServer();
 
     const PORT = getPort();
-    const host = "0.0.0.0";
+    const HOST = "0.0.0.0";
 
-    const server = app.listen(PORT, host, () => {
+    const server = app.listen(PORT, HOST, () => {
       console.log(`✅ Server listening on PORT=${PORT}`);
       console.log("🚀 All services ready to accept requests");
     });
@@ -35,12 +33,6 @@ async function startServer() {
     new ChatWebSocketServer(server);
     console.log("💬 Chat WebSocket server initialized");
 
-    // Basic error hook
-    server.on("error", (err) => {
-      console.error("❌ Server error:", err);
-      // Let the process crash; our outer catch will trigger restart on next boot.
-    });
-
     // Graceful shutdown
     const shutdown = (signal: string) => {
       console.log(`⚠️  Received ${signal}. Shutting down gracefully...`);
@@ -48,20 +40,10 @@ async function startServer() {
         console.log("🛑 HTTP server closed. Bye!");
         process.exit(0);
       });
-      // Force-exit after timeout to avoid hangs
       setTimeout(() => process.exit(1), 10_000).unref();
     };
     process.on("SIGINT", () => shutdown("SIGINT"));
     process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-    // Catch unhandled promise errors (for visibility)
-    process.on("unhandledRejection", (reason) => {
-      console.error("⚠️  Unhandled Rejection:", reason);
-    });
-    process.on("uncaughtException", (err) => {
-      console.error("⚠️  Uncaught Exception:", err);
-    });
-
   } catch (err) {
     console.error("❌ Failed to start server:", err);
     console.log("🔄 Retrying in 5 seconds...");
