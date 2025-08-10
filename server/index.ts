@@ -405,6 +405,9 @@ export function createServer() {
       console.log("Server will continue with limited functionality");
     });
 
+    app.get("/", (_req, res) => res.status(200).send("OK"));
+app.get("/favicon.ico", (_req, res) => res.status(204).end());
+
   // Health check with database status
   app.get("/api/ping", async (req, res) => {
     const startTime = Date.now();
