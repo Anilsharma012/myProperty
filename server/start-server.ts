@@ -1,54 +1,70 @@
+// server/start-server.ts
 import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 import { ChatWebSocketServer } from "./websocket";
 import { connectToDatabase } from "./db/mongodb";
 
 function getPort(): number {
-  const raw = process.env.PORT ?? "";
-  const port = Number.parseInt(raw, 10);
-  if (!Number.isFinite(port) || port <= 0) {
-    throw new Error("PORT env missing/invalid. Railway requires listening on process.env.PORT.");
+  const raw = process.env.PORT;
+  const n = raw ? Number(raw) : NaN;
+  if (!Number.isFinite(n) || n <= 0) {
+    console.error("❌ PORT missing/invalid:", raw);
+    process.exit(1);
   }
-  return port;
+  return n;
 }
 
-async function startServer() {
+async function connectDbWithTimeout(ms: number) {
+  return Promise.race([
+    (async () => {
+      console.log("🔄 DB: connecting…");
+      const conn = await connectToDatabase();
+      console.log("✅ DB: connected");
+      return conn;
+    })(),
+    new Promise((_, rej) =>
+      setTimeout(() => rej(new Error(`DB connect timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+async function start() {
+  // global safety nets
+  process.on("unhandledRejection", (err) => {
+    console.error("🔥 UnhandledRejection:", err);
+  });
+  process.on("uncaughtException", (err) => {
+    console.error("🔥 UncaughtException:", err);
+  });
+
+  console.log("🚀 Boot: starting server process");
+  const app = createServer();
+
+  // 1) LISTEN IMMEDIATELY (very important for Railway)
+  const PORT = getPort();
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ HTTP server listening on PORT=${PORT}`);
+  });
+
+  // 2) INIT services that depend on server socket
   try {
-    console.log("🔄 Initializing database connection...");
-    await connectToDatabase();
-    console.log("✅ Database connection established");
-
-    const app = createServer();
-
-    const PORT = getPort();
-    const HOST = "0.0.0.0";
-
-    const server = app.listen(PORT, HOST, () => {
-      console.log(`✅ Server listening on PORT=${PORT}`);
-      console.log("🚀 All services ready to accept requests");
-    });
-
-    // Extra services
     initializePushNotifications(server);
     initializePackageSync(server);
     new ChatWebSocketServer(server);
-    console.log("💬 Chat WebSocket server initialized");
+    console.log("💬 Chat/WebSocket & services initialized");
+  } catch (e) {
+    console.error("⚠️ Service init error:", e);
+  }
 
-    // Graceful shutdown
-    const shutdown = (signal: string) => {
-      console.log(`⚠️  Received ${signal}. Shutting down gracefully...`);
-      server.close(() => {
-        console.log("🛑 HTTP server closed. Bye!");
-        process.exit(0);
-      });
-      setTimeout(() => process.exit(1), 10_000).unref();
-    };
-    process.on("SIGINT", () => shutdown("SIGINT"));
-    process.on("SIGTERM", () => shutdown("SIGTERM"));
-  } catch (err) {
-    console.error("❌ Failed to start server:", err);
-    console.log("🔄 Retrying in 5 seconds...");
-    setTimeout(startServer, 5000);
+  // 3) CONNECT DB IN BACKGROUND (don’t block listen)
+  try {
+    await connectDbWithTimeout(10_000);
+  } catch (e) {
+    console.error("⚠️ DB connect issue:", (e as Error).message);
+    // app will still serve / and other non-DB endpoints
   }
 }
 
-startServer();
+start().catch((e) => {
+  console.error("❌ Fatal startup error:", e);
+  process.exit(1);
+});
