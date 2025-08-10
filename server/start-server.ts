@@ -1,18 +1,28 @@
+// server/start-server.ts
 import http from "http";
 import os from "os";
-import { createServer, initializePackageSync, initializePushNotifications } from "./index";
+import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 
-const app = createServer();
-const server = http.createServer(app);
+// ---- create app/http server ----
+const app = createServer();              // your createServer() must return an Express app
+app.set("trust proxy", 1);               // secure cookies behind Railway proxy
 
-// Reverse proxy friendly timeouts
-server.keepAliveTimeout = 65_000;   // ms
-server.headersTimeout   = 66_000;   // ms
-
-const PORT = Number(process.env.PORT || 8080);
+const raw = process.env.PORT;            // Railway always sets PORT
+const PORT = raw ? Number(raw) : NaN;
+if (!PORT || Number.isNaN(PORT)) {
+  console.error("❌ PORT env missing. Railway requires PORT.");
+  process.exit(1);
+}
 const HOST = "0.0.0.0";
 
-function logNet() {
+const httpServer = http.createServer(app);
+
+// Reverse-proxy friendly timeouts (avoid LB 15s weirdness)
+httpServer.keepAliveTimeout = 65_000;
+httpServer.headersTimeout   = 66_000;
+
+// ---- helpers ----
+function logInterfaces() {
   try {
     const ifaces = os.networkInterfaces();
     const flat = Object.entries(ifaces).flatMap(([name, addrs]) =>
@@ -22,39 +32,47 @@ function logNet() {
   } catch {}
 }
 
-server.listen(PORT, HOST, () => {
-  console.log(`✅ HTTP listening PORT=${PORT} HOST=${HOST}`);
-  logNet();
+function selfPing() {
+  const url = `http://127.0.0.1:${PORT}/__up`;
+  const req = http.get(url, (res) => {
+    const ok = !!res.statusCode && res.statusCode < 500;
+    console.log(`🩺 self-ping ${url} -> ${res.statusCode} (ok=${ok})`);
+    res.resume();
+  });
+  req.on("error", (err) => console.error("❌ self-ping error:", err.message));
+  req.setTimeout(5000, () => req.destroy(new Error("timeout")));
+}
 
-  // Initialize background services AFTER listen
+// ---- start listening ----
+httpServer.listen(PORT, HOST, () => {
+  console.log(`✅ HTTP listening PORT=${PORT} HOST=${HOST}`);
+  logInterfaces();
+
+  // Attach background/WS services AFTER listen so they reuse same server
   try {
-    initializePushNotifications(server);
+    initializePushNotifications?.(httpServer);
   } catch (e) {
     console.error("⚠️ push notifications init failed:", e);
   }
   try {
-    initializePackageSync(server);
+    initializePackageSync?.(httpServer);
   } catch (e) {
     console.error("⚠️ package sync init failed:", e);
   }
 
-  // Self-ping: proves app is reachable inside container
-  const url = `http://127.0.0.1:${PORT}/__up`;
-  const tick = () => {
-    const req = http.get(url, (res) => {
-      let ok = res.statusCode && res.statusCode < 500;
-      console.log(`🩺 self-ping ${url} -> ${res.statusCode} (ok=${ok})`);
-      res.resume();
-    });
-    req.on("error", (err) => console.error("❌ self-ping error:", err.message));
-    req.setTimeout(5000, () => req.destroy(new Error("timeout")));
-  };
-  setTimeout(tick, 1000);
-  setInterval(tick, 60_000);
+  // prove reachability inside container
+  setTimeout(selfPing, 1000);
+  setInterval(selfPing, 60_000);
 });
 
-server.on("error", (err: any) => {
-  console.error("❌ server error:", err?.message || err);
+// ---- hardening & shutdown ----
+httpServer.on("error", (err: any) => {
+  console.error("❌ httpServer error:", err?.code || err?.message || err);
+});
+
+process.on("SIGTERM", () => {
+  console.log("🛑 SIGTERM received. Closing server...");
+  httpServer.close(() => process.exit(0));
 });
 
 process.on("unhandledRejection", (r) => console.error("❌ unhandledRejection:", r));

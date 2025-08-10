@@ -356,9 +356,7 @@ export function createServer() {
   // Trust Railway/Proxy
   app.set("trust proxy", 1);
 
-  // Body & cookies
-  app.use(cookieParser());
-  app.use(express.json({ limit: "10mb" }));
+
 
   // Lightweight request log (appears in Railway logs)
   app.use((req, _res, next) => {
@@ -369,6 +367,9 @@ export function createServer() {
   // CORS (must be before routes)
   app.use(corsMiddleware);
   app.options("*", corsMiddleware);
+    // Body & cookies
+  app.use(cookieParser());
+  app.use(express.json({ limit: "10mb" }));
 
   /* ------------------------------ Liveness/Probe ------------------------------ */
   // Plain root so Railway health checks never 502
