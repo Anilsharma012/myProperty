@@ -1,11 +1,10 @@
+// server/index.ts
 import express, { Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 
-
 /**
- * ⚠️ Intentional: hum 'cors' package use nahi kar rahe.
- * Railway pe Netlify se aane wali credentials wali requests ke liye
- * manual CORS lagaya hai jo preflight ko 204 ke saath turant return karta hai.
+ * Manual CORS to support cross-site cookies from Netlify → Railway.
+ * Preflight (OPTIONS) is short-circuited with 204.
  */
 
 import { connectToDatabase, getDatabase } from "./db/mongodb";
@@ -311,94 +310,66 @@ import {
 } from "./routes/custom-fields";
 import { testCustomFields, fixCustomFields } from "./routes/debug-custom-fields";
 
-/* ------------------------ Push notification debug ------------------------ */
-import {
-  testPushNotification,
-  getPushNotificationStats,
-  testUserConnection,
-} from "./routes/test-push-notifications";
-
-/* =========================================================================
-   CORS (manual) – credentials support
-   ========================================================================= */
-
-// const ALLOWED_ORIGINS = new Set<string>([
-//   "https://ashishproperty.netlify.app",
-//   "http://localhost:5173",
-//   "http://127.0.0.1:5173",
-// ]);
-
-// function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-//   const origin = (req.headers.origin || "").replace(/\/$/, "");
-//   if (origin && ALLOWED_ORIGINS.has(origin)) {
-//     res.setHeader("Access-Control-Allow-Origin", origin);
-//     res.setHeader("Vary", "Origin");
-//     res.setHeader("Access-Control-Allow-Credentials", "true");
-//   }
-//   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "Content-Type, Authorization, Accept, X-Requested-With"
-//   );
-
-//   if (req.method === "OPTIONS") {
-//     return res.status(204).end();
-//   }
-//   next();
-// }
-
 /* =========================================================================
    Server factory
    ========================================================================= */
-
 export function createServer() {
   const app = express();
 
-  // Trust Railway/Proxy
-  
+  // Trust Railway/Proxy for secure cookies
   app.set("trust proxy", 1);
 
-  // ✅ 1) CORS + instant preflight handler — FIRST middleware
-  const ALLOWLIST = new Set([
+  // ===== CORS (TOP, short-circuit OPTIONS) =====
+  const ALLOWLIST = new Set<string>([
     "https://ashishproperty.netlify.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
   ]);
 
-  function setCors(req: express.Request, res: express.Response) {
+  function setCors(req: Request, res: Response) {
     const origin = (req.headers.origin || "").replace(/\/+$/, "");
     if (origin && ALLOWLIST.has(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Credentials", "true");
     }
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type, Authorization, Accept, X-Requested-With"
     );
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
     res.setHeader("Access-Control-Max-Age", "86400");
   }
 
-  app.use((req, res, next) => {
-    // tiny log to verify OPTIONS actually reaches app
+  // Tiny logger to prove OPTIONS reaches app
+  app.use((req, _res, next) => {
     if (req.method === "OPTIONS" || req.path.startsWith("/api/")) {
       console.log("🔎 INCOMING:", req.method, req.originalUrl, "origin=", req.headers.origin);
     }
-
-    setCors(req, res);
-
-    // 👉 short-circuit ALL OPTIONS early (avoid any heavy middleware)
-    if (req.method === "OPTIONS") return res.status(204).end();
     next();
   });
+
+  // Global CORS + instant preflight
+  app.use((req, res, next) => {
+    setCors(req, res);
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+    next();
+  });
+
+  // Also explicit .options for safety
+  app.options("*", (req, res) => {
+    setCors(req, res);
+    return res.sendStatus(204);
+  });
+
+  // Core middlewares
   app.use(express.json({ limit: "10mb" }));
+  app.use(cookieParser());
 
   /* ------------------------------ Liveness/Probe ------------------------------ */
-  // Plain root so Railway health checks never 502
-  app.get("/", (req, res) => res.type("text").send(`probe ok: ${req.method} ${req.path}`));
-  // Conventional up path too
+  app.get("/", (_req, res) => res.type("text").send("ok /"));
   app.get("/__up", (_req, res) => res.status(200).json({ ok: true, ts: Date.now() }));
+  app.get("/api/_cors", (_req, res) => res.json({ ok: true }));
 
   /* -------------------------- DB warm-up (non-blocking) ----------------------- */
   connectToDatabase()
@@ -409,7 +380,7 @@ export function createServer() {
     });
 
   /* -------------------------------- Diagnostics ------------------------------- */
-  app.get("/api/ping", async (req, res) => {
+  app.get("/api/ping", async (_req, res) => {
     const start = Date.now();
     let dbStatus = "unknown";
     let dbName = "unknown";
@@ -507,30 +478,10 @@ export function createServer() {
   app.get("/api/homepage-sliders", getHomepageSliders);
   app.get("/api/admin/homepage-sliders", authenticateToken, requireAdmin, getHomepageSliders);
   app.post("/api/admin/homepage-sliders", authenticateToken, requireAdmin, createHomepageSlider);
-  app.put(
-    "/api/admin/homepage-sliders/:sliderId",
-    authenticateToken,
-    requireAdmin,
-    updateHomepageSlider
-  );
-  app.put(
-    "/api/admin/homepage-sliders/:sliderId/toggle",
-    authenticateToken,
-    requireAdmin,
-    toggleSliderStatus
-  );
-  app.delete(
-    "/api/admin/homepage-sliders/:sliderId",
-    authenticateToken,
-    requireAdmin,
-    deleteHomepageSlider
-  );
-  app.post(
-    "/api/admin/homepage-sliders/initialize",
-    authenticateToken,
-    requireAdmin,
-    initializeDefaultSlider
-  );
+  app.put("/api/admin/homepage-sliders/:sliderId", authenticateToken, requireAdmin, updateHomepageSlider);
+  app.put("/api/admin/homepage-sliders/:sliderId/toggle", authenticateToken, requireAdmin, toggleSliderStatus);
+  app.delete("/api/admin/homepage-sliders/:sliderId", authenticateToken, requireAdmin, deleteHomepageSlider);
+  app.post("/api/admin/homepage-sliders/initialize", authenticateToken, requireAdmin, initializeDefaultSlider);
 
   // Admin core
   app.get("/api/admin/users", authenticateToken, requireAdmin, getAllUsers);
@@ -563,26 +514,11 @@ export function createServer() {
   app.post("/api/admin/categories", authenticateToken, requireAdmin, createCategory);
   app.put("/api/admin/categories/:categoryId", authenticateToken, requireAdmin, updateCategory);
   app.delete("/api/admin/categories/:categoryId", authenticateToken, requireAdmin, deleteCategory);
-  app.post(
-    "/api/admin/categories/upload-icon",
-    authenticateToken,
-    requireAdmin,
-    uploadCategoryIcon
-  );
+  app.post("/api/admin/categories/upload-icon", authenticateToken, requireAdmin, uploadCategoryIcon);
 
   app.get("/api/admin/premium-properties", authenticateToken, requireAdmin, getPremiumProperties);
-  app.put(
-    "/api/admin/premium-properties/:propertyId/approval",
-    authenticateToken,
-    requireAdmin,
-    approvePremiumProperty
-  );
-  app.put(
-    "/api/admin/properties/:propertyId/promotion",
-    authenticateToken,
-    requireAdmin,
-    updatePropertyPromotion
-  );
+  app.put("/api/admin/premium-properties/:propertyId/approval", authenticateToken, requireAdmin, approvePremiumProperty);
+  app.put("/api/admin/properties/:propertyId/promotion", authenticateToken, requireAdmin, updatePropertyPromotion);
 
   app.post("/api/admin/initialize", initializeAdmin);
   app.post("/api/admin/test-property", authenticateToken, requireAdmin, createTestProperty);
@@ -602,29 +538,14 @@ export function createServer() {
   app.post("/api/payments/transaction", authenticateToken, createTransaction);
   app.get("/api/payments/transactions", authenticateToken, getUserTransactions);
   app.get("/api/admin/transactions", authenticateToken, requireAdmin, getAllTransactions);
-  app.put(
-    "/api/admin/transactions/:transactionId",
-    authenticateToken,
-    requireAdmin,
-    updateTransactionStatus
-  );
-  app.put(
-    "/api/admin/transactions/:transactionId/status",
-    authenticateToken,
-    requireAdmin,
-    updateTransactionStatus
-  );
+  app.put("/api/admin/transactions/:transactionId", authenticateToken, requireAdmin, updateTransactionStatus);
+  app.put("/api/admin/transactions/:transactionId/status", authenticateToken, requireAdmin, updateTransactionStatus);
   app.post("/api/payments/verify", verifyPayment);
   app.get("/api/payments/methods", getPaymentMethods);
 
   app.get("/api/admin/payment-settings", authenticateToken, requireAdmin, getPaymentSettings);
   app.put("/api/admin/payment-settings", authenticateToken, requireAdmin, updatePaymentSettings);
-  app.post(
-    "/api/admin/payment-settings/test-razorpay",
-    authenticateToken,
-    requireAdmin,
-    testRazorpayConnection
-  );
+  app.post("/api/admin/payment-settings/test-razorpay", authenticateToken, requireAdmin, testRazorpayConnection);
   app.get("/api/payments/active-methods", getActivePaymentMethods);
 
   /* --------------------------------- Banners --------------------------------- */
@@ -652,11 +573,7 @@ export function createServer() {
 
   /* ---------------------------------- Chat ----------------------------------- */
   app.get("/api/chat/conversations", authenticateToken, getUserConversations);
-  app.get(
-    "/api/chat/conversations/:conversationId/messages",
-    authenticateToken,
-    getConversationMessages
-  );
+  app.get("/api/chat/conversations/:conversationId/messages", authenticateToken, getConversationMessages);
   app.post("/api/chat/messages", authenticateToken, sendMessage);
   app.post("/api/chat/start-property-conversation", authenticateToken, startPropertyConversation);
   app.get("/api/chat/unread-count", authenticateToken, getUnreadCount);
@@ -665,18 +582,8 @@ export function createServer() {
   app.get("/api/testimonials", getPublicTestimonials);
   app.get("/api/admin/testimonials", authenticateToken, requireAdmin, getAllTestimonials);
   app.post("/api/testimonials", authenticateToken, createTestimonial);
-  app.put(
-    "/api/admin/testimonials/:testimonialId",
-    authenticateToken,
-    requireAdmin,
-    updateTestimonialStatus
-  );
-  app.delete(
-    "/api/admin/testimonials/:testimonialId",
-    authenticateToken,
-    requireAdmin,
-    deleteTestimonial
-  );
+  app.put("/api/admin/testimonials/:testimonialId", authenticateToken, requireAdmin, updateTestimonialStatus);
+  app.delete("/api/admin/testimonials/:testimonialId", authenticateToken, requireAdmin, deleteTestimonial);
 
   /* ------------------------------------ FAQ ---------------------------------- */
   app.get("/api/faqs", getPublicFAQs);
@@ -698,26 +605,11 @@ export function createServer() {
   app.get("/api/reports/reasons", getPublicReportReasons);
   app.get("/api/admin/reports/reasons", authenticateToken, requireAdmin, getAllReportReasons);
   app.post("/api/admin/reports/reasons", authenticateToken, requireAdmin, createReportReason);
-  app.put(
-    "/api/admin/reports/reasons/:reasonId",
-    authenticateToken,
-    requireAdmin,
-    updateReportReason
-  );
-  app.delete(
-    "/api/admin/reports/reasons/:reasonId",
-    authenticateToken,
-    requireAdmin,
-    deleteReportReason
-  );
+  app.put("/api/admin/reports/reasons/:reasonId", authenticateToken, requireAdmin, updateReportReason);
+  app.delete("/api/admin/reports/reasons/:reasonId", authenticateToken, requireAdmin, deleteReportReason);
   app.get("/api/admin/reports", authenticateToken, requireAdmin, getAllUserReports);
   app.post("/api/reports", authenticateToken, createUserReport);
-  app.put(
-    "/api/admin/reports/:reportId",
-    authenticateToken,
-    requireAdmin,
-    updateUserReportStatus
-  );
+  app.put("/api/admin/reports/:reportId", authenticateToken, requireAdmin, updateUserReportStatus);
   app.post("/api/reports/initialize", initializeReportReasons);
 
   /* ------------------------------ User Packages ------------------------------ */
@@ -743,7 +635,6 @@ export function createServer() {
   app.get("/api/test/database", testDatabase);
   app.get("/api/test/admin-user", testAdminUser);
   app.get("/api/test/admin-stats", testAdminStats);
-
   app.post("/api/fix/create-admin", forceCreateAdmin);
   app.get("/api/fix/admin-endpoints", fixAdminEndpoints);
   app.post("/api/fix/initialize-system", initializeSystemData);
@@ -883,7 +774,6 @@ export function createServer() {
 /* =========================================================================
    Extra service initializers – called from start-server.ts
    ========================================================================= */
-
 export function initializePushNotifications(server: any) {
   pushNotificationService.initialize(server);
   console.log("📱 Push notification service initialized");
