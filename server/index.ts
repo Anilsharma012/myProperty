@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 
+
 /**
  * ⚠️ Intentional: hum 'cors' package use nahi kar rahe.
  * Railway pe Netlify se aane wali credentials wali requests ke liye
@@ -321,30 +322,30 @@ import {
    CORS (manual) – credentials support
    ========================================================================= */
 
-const ALLOWED_ORIGINS = new Set<string>([
-  "https://ashishproperty.netlify.app",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-]);
+// const ALLOWED_ORIGINS = new Set<string>([
+//   "https://ashishproperty.netlify.app",
+//   "http://localhost:5173",
+//   "http://127.0.0.1:5173",
+// ]);
 
-function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-  const origin = (req.headers.origin || "").replace(/\/$/, "");
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Accept, X-Requested-With"
-  );
+// function corsMiddleware(req: Request, res: Response, next: NextFunction) {
+//   const origin = (req.headers.origin || "").replace(/\/$/, "");
+//   if (origin && ALLOWED_ORIGINS.has(origin)) {
+//     res.setHeader("Access-Control-Allow-Origin", origin);
+//     res.setHeader("Vary", "Origin");
+//     res.setHeader("Access-Control-Allow-Credentials", "true");
+//   }
+//   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "Content-Type, Authorization, Accept, X-Requested-With"
+//   );
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-  next();
-}
+//   if (req.method === "OPTIONS") {
+//     return res.status(204).end();
+//   }
+//   next();
+// }
 
 /* =========================================================================
    Server factory
@@ -354,21 +355,43 @@ export function createServer() {
   const app = express();
 
   // Trust Railway/Proxy
+  
   app.set("trust proxy", 1);
 
+  // ✅ 1) CORS + instant preflight handler — FIRST middleware
+  const ALLOWLIST = new Set([
+    "https://ashishproperty.netlify.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
 
+  function setCors(req: express.Request, res: express.Response) {
+    const origin = (req.headers.origin || "").replace(/\/+$/, "");
+    if (origin && ALLOWLIST.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Accept, X-Requested-With"
+    );
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
 
-  // Lightweight request log (appears in Railway logs)
-  app.use((req, _res, next) => {
-    console.log(`➡️  ${req.method} ${req.url} origin=${req.headers.origin || "-"}`);
+  app.use((req, res, next) => {
+    // tiny log to verify OPTIONS actually reaches app
+    if (req.method === "OPTIONS" || req.path.startsWith("/api/")) {
+      console.log("🔎 INCOMING:", req.method, req.originalUrl, "origin=", req.headers.origin);
+    }
+
+    setCors(req, res);
+
+    // 👉 short-circuit ALL OPTIONS early (avoid any heavy middleware)
+    if (req.method === "OPTIONS") return res.status(204).end();
     next();
   });
-
-  // CORS (must be before routes)
-  app.use(corsMiddleware);
-  app.options("*", corsMiddleware);
-    // Body & cookies
-  app.use(cookieParser());
   app.use(express.json({ limit: "10mb" }));
 
   /* ------------------------------ Liveness/Probe ------------------------------ */
