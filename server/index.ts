@@ -328,6 +328,13 @@ app.set("trust proxy", 1);
 
   
   installCors(app, { log: true });
+
+
+  app.use((req, _res, next) => {
+  console.log("➡️  EXTERNAL HIT", req.method, req.originalUrl);
+  next();
+});
+
   app.use(express.json({ limit: "10mb" }));
   app.use(cookieParser());
 
