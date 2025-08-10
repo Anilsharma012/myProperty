@@ -24,7 +24,7 @@ export default defineConfig({
       ],
       output: {
         format: "es",
-        entryFileNames: "start-server.mjs", // ✅ final file name
+        entryFileNames: "start-server.ts", // ✅ final file name
       },
     },
     minify: false,     // debugging friendly
