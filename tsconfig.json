@@ -1,28 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
 
     "moduleResolution": "node",
-    "jsx": "react-jsx",
-    "strict": true,
-    "noEmit": true,
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
 
-    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "isolatedModules": true,
+    "noEmit": true,
+
     "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/*"],
-      "@shared/*": ["shared/*"]
+      "@/*": ["./client/*"],
+      "@shared/*": ["./shared/*"]
     },
 
-    "types": ["node", "vite/client", "express"]
+    /* ✅ add this */
+    "types": ["node"],
+    "resolveJsonModule": true
   },
   "include": [
     "client/**/*",
@@ -31,5 +32,5 @@
     "vite.config.ts",
     "vite.config.server.ts"
   ],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
