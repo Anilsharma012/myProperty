@@ -1,31 +1,29 @@
 {
   "name": "fusion-starter",
   "private": true,
-  "type": "module",
   "pkg": {
-    "assets": [
-      "dist/spa/*"
-    ],
-    "scripts": [
-      "dist/server/**/*.js"
-    ]
+    "assets": ["dist/spa/*"],
+    "scripts": ["dist/server/**/*.js"]
   },
   "engines": {
     "node": ">=18"
   },
+
   "scripts": {
     "dev": "vite",
     "clean": "rimraf dist || rm -rf dist",
-    "build:server": "vite build --config vite.config.server.ts",
+    "build:server": "tsc -p server/tsconfig.json",
     "build:client": "vite build",
     "build": "npm run clean && npm run build:server && npm run build:client",
-    "start": "node dist/server/start-server.mjs",
+    "start": "node --enable-source-maps dist/server/node-build.js",
+    "dev:server": "tsx --project server/tsconfig.json server/node-build.ts",
     "test": "vitest --run",
     "test:db": "cd server && npx tsx scripts/testConnection.ts",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc",
-    "lsdist": "node -e \"const fs=require('fs');const p='dist/server';console.log('DIST LIST:',fs.existsSync(p)?fs.readdirSync(p):'no dist')\""
+    "typecheck": "tsc -p server/tsconfig.json",
+    "lsdist": "node -e \"const fs=require('fs');const p='dist/server';console.log('DIST LIST:', fs.existsSync(p)?fs.readdirSync(p):'no dist')\""
   },
+
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.10",

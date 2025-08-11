@@ -1,43 +1,93 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import express from "express"; // ❗fixed import
-import { createServer } from "./index";
+// server/node-build.ts
+import http from "http";
+import os from "os";
+import { createServer, initializePushNotifications, initializePackageSync } from "./index";
 
-// ✅ Fix __dirname manually
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/* --------------------------- boot diagnostics --------------------------- */
+console.log("BOOT[node-build]: 0 file loaded");
+process.on("uncaughtException", (e) => console.error("❌ UNCAUGHT:", e));
+process.on("unhandledRejection", (e) => console.error("❌ UNHANDLED:", e));
 
-// ✅ Define dist path correctly
-const distPath = path.join(__dirname, "../spa");
+/* ----------------------------- create server ---------------------------- */
+let app: any;
+try {
+  console.log("BOOT[node-build]: 1 before createServer()");
+  app = createServer(); // must return an Express app
+  console.log("BOOT[node-build]: 2 after createServer()");
+} catch (e) {
+  console.error("❌ BOOT[node-build]: createServer() threw:", e);
+  // tiny fallback so /__up can still answer for debugging
+  const tiny = http.createServer((_req, res) => {
+    res.writeHead(503, { "content-type": "application/json" });
+    res.end(JSON.stringify({ ok: false, error: "createServer failed" }));
+  });
+  const p = Number(process.env.PORT ?? 8080);
+  tiny.listen(p, "0.0.0.0", () => console.log(`🚑 tiny server on ${p}`));
+  throw e;
+}
 
-const app = createServer();
-const port = process.env.PORT || 3000;
+app.set("trust proxy", 1);
 
-// ✅ Serve static files
-app.use(express.static(distPath));
+/* ------------------------------- net config ----------------------------- */
+const raw = process.env.PORT;
+const PORT = Number(raw ?? 8080);
+const HOST = "0.0.0.0";
+if (!Number.isFinite(PORT) || PORT <= 0) {
+  console.error(`❌ Invalid PORT (${raw}), falling back to 8080`);
+}
 
-// ✅ React Router fallback for non-API routes
-app.get("*", (req, res) => {
-  if (req.path.startsWith("/api/") || req.path.startsWith("/health")) {
-    return res.status(404).json({ error: "API endpoint not found" });
-  }
+/* -------------------------------- server -------------------------------- */
+const httpServer = http.createServer(app);
+console.log("BOOT[node-build]: 3 http.createServer done");
 
-  res.sendFile(path.join(distPath, "index.html"));
+// Reverse-proxy friendly timeouts
+httpServer.keepAliveTimeout = 65_000;
+httpServer.headersTimeout   = 66_000;
+
+/* -------------------------------- helpers ------------------------------- */
+function logInterfaces() {
+  try {
+    const ifaces = os.networkInterfaces();
+    const flat = Object.entries(ifaces).flatMap(([name, addrs]) =>
+      (addrs || []).map((a) => `${name}:${a.address}/${a.family}`)
+    );
+    console.log("🌐 Interfaces:", flat.join(", "));
+  } catch {}
+}
+
+function selfPing() {
+  const url = `http://127.0.0.1:${PORT}/__up`;
+  const req = http.get(url, (res) => {
+    const ok = !!res.statusCode && res.statusCode < 500;
+    console.log(`🩺 self-ping ${url} -> ${res.statusCode} (ok=${ok})`);
+    res.resume();
+  });
+  req.on("error", (err) => console.error("❌ self-ping error:", (err as any)?.message || err));
+  req.setTimeout(5000, () => req.destroy(new Error("timeout")));
+}
+
+/* ------------------------------- start listen --------------------------- */
+httpServer.on("error", (err: any) => {
+  console.error("❌ httpServer error:", err?.code || err?.message || err);
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Fusion Starter server running on port ${port}`);
-  console.log(`📱 Frontend: http://localhost:${port}`);
-  console.log(`🔧 API: http://localhost:${port}/api`);
+httpServer.listen(PORT, HOST, () => {
+  console.log(`✅ node-build listening PORT=${PORT} HOST=${HOST}`);
+  logInterfaces();
+
+  // Attach background services AFTER listen
+  try { initializePushNotifications?.(httpServer); console.log("📱 Push notification service initialized"); }
+  catch (e) { console.error("⚠️ push notifications init failed:", e); }
+  try { initializePackageSync?.(httpServer); console.log("📦 Package sync service initialized"); }
+  catch (e) { console.error("⚠️ package sync init failed:", e); }
+
+  // reachability proof
+  setTimeout(selfPing, 1000);
+  setInterval(selfPing, 60_000);
 });
 
-// ✅ Graceful shutdown
+/* ---------------------------- shutdown signals -------------------------- */
 process.on("SIGTERM", () => {
-  console.log("🛑 Received SIGTERM, shutting down gracefully");
-  process.exit(0);
-});
-
-process.on("SIGINT", () => {
-  console.log("🛑 Received SIGINT, shutting down gracefully");
-  process.exit(0);
+  console.log("🛑 SIGTERM received. Closing server...");
+  httpServer.close(() => process.exit(0));
 });
