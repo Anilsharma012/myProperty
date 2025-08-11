@@ -326,7 +326,9 @@ export function createServer() {
 
 app.set("trust proxy", 1);
 
-
+  app.get("/__up", (_req, res) => {
+    res.status(200).json({ ok: true, ts: Date.now() });
+  });
 
 
 
@@ -348,8 +350,7 @@ app.set("trust proxy", 1);
   app.use("/api", (req, res) => {
     res.status(404).json({ error: "Not Found", path: req.path });
   });
-  app.get("/__up", (_req, res) => res.status(200).json({ ok: true, ts: Date.now() }));
-
+  
 
   /* -------------------------------- Diagnostics ------------------------------- */
   app.get("/api/ping", async (req, res) => {
