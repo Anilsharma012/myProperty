@@ -339,7 +339,9 @@ app.set("trust proxy", 1);
   app.use(cookieParser());
 
   /* ------------------------------ Liveness/Probe ------------------------------ */
-
+  app.use("/api", (req, res) => {
+    res.status(404).json({ error: "Not Found", path: req.path });
+  });
   app.get("/__up", (_req, res) => res.status(200).json({ ok: true, ts: Date.now() }));
 
 
@@ -798,9 +800,10 @@ app.set("trust proxy", 1);
   });
 
   /* ------------------------------ 404 + Errors ------------------------------- */
-  app.use((req, res) => {
-    res.status(404).json({ error: "Not Found", path: req.path });
-  });
+ app.use("/api", (req, res) => {
+  res.status(404).json({ error: "Not Found", path: req.path });
+});
+
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
