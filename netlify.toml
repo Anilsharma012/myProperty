@@ -1,7 +1,29 @@
 [build]
   command = "npm run build:client"
-  publish = "client/dist" # ✅ Because client/ is source, dist/ is output
+  publish = "client/dist"
 
+# ✅ Proxy all API calls to Railway (no CORS needed)
+[[redirects]]
+  from = "/api/*"
+  to = "https://myproperty-production-a104.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
+# ✅ Proxy WebSocket endpoints (push notifications etc.)
+[[redirects]]
+  from = "/ws/*"
+  to = "wss://myproperty-production-a104.up.railway.app/ws/:splat"
+  status = 200
+  force = true
+
+# (optional) if socket.io is used anywhere
+[[redirects]]
+  from = "/socket.io/*"
+  to = "wss://myproperty-production-a104.up.railway.app/socket.io/:splat"
+  status = 200
+  force = true
+
+# 🔚 SPA fallback — keep this LAST
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -326,6 +326,12 @@ export function createServer() {
 
 app.set("trust proxy", 1);
 
+
+
+
+
+
+
   
   installCors(app, { log: true });
 
