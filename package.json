@@ -9,20 +9,25 @@
     "node": ">=18"
   },
 
+  
   "scripts": {
     "dev": "vite",
     "clean": "rimraf dist || rm -rf dist",
-    "build:server": "tsc -p server/tsconfig.json",
+
+    "build:server": "vite build --config vite.config.server.ts",
     "build:client": "vite build",
     "build": "npm run clean && npm run build:server && npm run build:client",
-    "start": "node --enable-source-maps dist/server/node-build.js",
-    "dev:server": "tsx --project server/tsconfig.json server/node-build.ts",
+
+    "start": "node --enable-source-maps dist/server/start-server.mjs",
+
     "test": "vitest --run",
     "test:db": "cd server && npx tsx scripts/testConnection.ts",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc -p server/tsconfig.json",
+    "typecheck": "tsc",
     "lsdist": "node -e \"const fs=require('fs');const p='dist/server';console.log('DIST LIST:', fs.existsSync(p)?fs.readdirSync(p):'no dist')\""
   },
+
+
 
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
